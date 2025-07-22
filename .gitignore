@@ -23,6 +23,9 @@ firebaserc
 # Keep your actual firebase-config.js file local and use the template
 assets/js/firebase-config.js
 
+# Firebase Service Account - Contains private keys and sensitive credentials
+firebase-service-account.json
+
 # Build outputs
 dist/
 build/

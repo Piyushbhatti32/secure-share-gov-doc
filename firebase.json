@@ -5,26 +5,11 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ],
-    "headers": [
-      {
-        "source": "**/*.@(js|css|png|jpg|jpeg|gif|ico|svg|webp|woff|woff2|ttf|eot)",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "max-age=31536000"
-          }
-        ]
-      }
     ]
   },
   "firestore": {
+    "database": "(default)",
+    "location": "asia-east1",
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
