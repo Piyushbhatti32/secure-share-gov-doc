@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - Secure Gov Doc Share</title>
+  <link rel="stylesheet" href="/assets/css/styles.css">
+</head>
+<body>
+  <nav class="navbar">
+    <h2>Secure Gov Doc Share</h2>
+    <div class="nav-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="profile.html">Profile</a>
+      <button onclick="signOut()" class="btn-logout">Logout</button>
+    </div>
+  </nav>
+  
+  <div class="main-content">
+    <h1>My Profile</h1>
+    
+    <div class="profile-section">
+      <div id="userProfile">
+        <p>Loading profile...</p>
+      </div>
+      
+      <div class="profile-actions">
+        <h3>Profile Actions</h3>
+        <button onclick="copyUID()" class="btn-share">Copy My UID</button>
+        <button onclick="showQRCode()" class="btn-view">Show QR Code</button>
+      </div>
+    </div>
+  </div>
+  
+  <script type="module" src="/assets/js/logger.js"></script>
+  <script type="module" src="/assets/js/auth.js"></script>
+  <script type="module" src="/assets/js/profile.js"></script>
+</body>
+</html>

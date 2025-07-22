@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Secure Gov Doc Share</title>
+  <link rel="stylesheet" href="/assets/css/styles.css">
+</head>
+<body>
+  <nav class="navbar">
+    <h2>Secure Gov Doc Share</h2>
+    <div class="nav-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="profile.html">Profile</a>
+      <button onclick="signOut()" class="btn-logout">Logout</button>
+    </div>
+  </nav>
+  
+  <div class="main-content">
+    <h1>My Government Documents</h1>
+    
+    <div class="upload-section">
+      <h3>Upload New Document</h3>
+      <div class="file-upload">
+        <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+        <button onclick="uploadDoc()" class="btn-upload">Upload Document</button>
+      </div>
+      <p class="upload-help">Supported formats: PDF, Images (JPG, PNG), Word documents</p>
+    </div>
+    
+    <div class="documents-section">
+      <h3>Your Documents</h3>
+      <ul id="docList" class="document-list"></ul>
+    </div>
+    
+    <div class="shared-section">
+      <h3>Documents Shared With You</h3>
+      <ul id="sharedDocList" class="document-list"></ul>
+    </div>
+  </div>
+  
+  <script type="module" src="/assets/js/logger.js"></script>
+  <script type="module" src="/assets/js/auth.js"></script>
+  <script type="module" src="/assets/js/docManager.js"></script>
+</body>
+</html>
