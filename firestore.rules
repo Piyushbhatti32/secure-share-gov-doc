@@ -1,18 +1,166 @@
-rules_version='2'
+// Firestore Security Rules for Government Document Portal
+// Enhanced security for user data and document metadata
 
+rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // Users can only access their own user document
+    match /users/{userId} {
+      allow read, write: if request.auth != null 
+                         && request.auth.uid == userId
+                         && isValidUser();
+                         
+      // Only allow creating user profile during registration
+      allow create: if request.auth != null 
+                     && request.auth.uid == userId
+                     && isValidUserData();
+    }
+    
+    // Document metadata - users can only access their own documents
+    match /documents/{documentId} {
+      // Users can read/write their own document metadata
+      allow read, write: if request.auth != null 
+                          && request.auth.uid == resource.data.uid
+                          && isValidUser();
+      
+      // Allow creation of new documents
+      allow create: if request.auth != null 
+                     && request.auth.uid == request.resource.data.uid
+                     && isValidDocumentData()
+                     && isValidUser();
+                     
+      // Allow updates only by owner
+      allow update: if request.auth != null 
+                     && request.auth.uid == resource.data.uid
+                     && isValidDocumentUpdate()
+                     && isValidUser();
+                     
+      // Allow deletion only by owner
+      allow delete: if request.auth != null 
+                     && request.auth.uid == resource.data.uid;
+    }
+    
+    // Shared documents - users can read documents shared with them
+    match /sharedDocs/{shareId} {
+      // Allow reading if user is either owner or recipient
+      allow read: if request.auth != null && (
+                    request.auth.uid == resource.data.ownerId ||
+                    request.auth.uid == resource.data.sharedWith
+                  ) && isValidUser();
+                  
+      // Allow creating share only by document owner
+      allow create: if request.auth != null 
+                     && request.auth.uid == request.resource.data.ownerId
+                     && isValidShareData()
+                     && isValidUser();
+                     
+      // Allow deletion only by owner
+      allow delete: if request.auth != null 
+                     && request.auth.uid == resource.data.ownerId;
+                     
+      // No updates allowed - shares are immutable
+      allow update: if false;
+    }
+    
+    // Activity logs - users can only read their own logs
+    match /logs/{logId} {
+      allow read: if request.auth != null 
+                  && request.auth.uid == resource.data.userId
+                  && isValidUser();
+                  
+      // Allow creating logs (for audit trail)
+      allow create: if request.auth != null 
+                     && request.auth.uid == request.resource.data.userId
+                     && isValidLogData();
+                     
+      // No updates or deletions - logs are immutable
+      allow update, delete: if false;
+    }
+    
+    // System collections - completely protected
+    match /system/{document=**} {
+      allow read, write: if false;
+    }
+    
+    // Admin collections - completely protected  
+    match /admin/{document=**} {
+      allow read, write: if false;
+    }
+    
+    // Default deny rule
     match /{document=**} {
-      // This rule allows anyone with your database reference to view, edit,
-      // and delete all data in your database. It is useful for getting
-      // started, but it is configured to expire after 30 days because it
-      // leaves your app open to attackers. At that time, all client
-      // requests to your database will be denied.
-      //
-      // Make sure to write security rules for your app before that time, or
-      // else all client requests to your database will be denied until you
-      // update your rules.
-      allow read, write: if request.time < timestamp.date(2025, 8, 21);
+      allow read, write: if false;
     }
   }
+}
+
+// Validation functions
+function isValidUser() {
+  return request.auth != null && 
+         request.auth.uid != null &&
+         request.auth.token.email != null &&
+         request.auth.token.email_verified == true;
+}
+
+function isValidUserData() {
+  let data = request.resource.data;
+  return data.keys().hasAll(['uid', 'email', 'createdAt']) &&
+         data.uid == request.auth.uid &&
+         data.email == request.auth.token.email &&
+         data.createdAt is timestamp &&
+         data.keys().size() <= 10; // Limit number of fields
+}
+
+function isValidDocumentData() {
+  let data = request.resource.data;
+  return data.keys().hasAll(['uid', 'name', 'fileName', 'type', 'uploadedAt']) &&
+         data.uid == request.auth.uid &&
+         data.name is string &&
+         data.name.size() > 0 &&
+         data.name.size() < 200 &&
+         data.fileName is string &&
+         data.fileName.size() > 0 &&
+         data.fileName.size() < 250 &&
+         data.type in ['aadhaar', 'pan', 'passport', 'driving_license', 'voter_id', 
+                       'birth_certificate', 'income_certificate', 'caste_certificate', 
+                       'marksheet', 'other'] &&
+         data.uploadedAt is timestamp &&
+         data.keys().size() <= 15; // Limit number of fields
+}
+
+function isValidDocumentUpdate() {
+  let data = request.resource.data;
+  let existing = resource.data;
+  
+  // Only allow updating specific fields
+  return data.uid == existing.uid && // UID cannot change
+         data.fileName == existing.fileName && // Filename cannot change
+         data.uploadedAt == existing.uploadedAt; // Upload date cannot change
+}
+
+function isValidShareData() {
+  let data = request.resource.data;
+  return data.keys().hasAll(['docId', 'ownerId', 'ownerEmail', 'sharedWith', 'sharedWithEmail', 'sharedAt']) &&
+         data.ownerId == request.auth.uid &&
+         data.ownerEmail == request.auth.token.email &&
+         data.docId is string &&
+         data.docId.size() > 0 &&
+         data.sharedWith is string &&
+         data.sharedWith.size() > 0 &&
+         data.sharedWithEmail is string &&
+         data.sharedWithEmail.matches('.*@.*\..*') &&
+         data.sharedAt is timestamp &&
+         data.keys().size() <= 8; // Limit number of fields
+}
+
+function isValidLogData() {
+  let data = request.resource.data;
+  return data.keys().hasAll(['action', 'timestamp', 'userId']) &&
+         data.userId == request.auth.uid &&
+         data.action is string &&
+         data.action.size() > 0 &&
+         data.action.size() < 100 &&
+         data.timestamp is timestamp &&
+         data.keys().size() <= 10; // Limit number of fields
 }

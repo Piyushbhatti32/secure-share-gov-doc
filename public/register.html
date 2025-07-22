@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Government Document Portal</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏛️</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3e%3ctext y=%22.9em%22 font-size=%2290%22%3e🏛️%3c/text%3e%3c/svg%3e">
+    
+    <!-- FirebaseUI CSS -->
+    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/6.1.0/firebase-ui-auth.css" />
     <style>
         /* Government Portal Professional Styling */
         * {
@@ -162,7 +165,7 @@
             flex-direction: column;
             justify-content: center;
             overflow-y: auto;
-            max-height: 600px;
+            max-height: 900px;
         }
         
         .form-header {
@@ -477,6 +480,439 @@
         #recaptcha-container {
             margin-top: 15px;
         }
+        
+        /* FirebaseUI Customizations */
+        #firebaseui-auth-container {
+            margin-bottom: 0px;
+        }
+        
+        /* Loading Animation */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* FirebaseUI Custom Styling */
+        .firebaseui-container {
+            font-family: 'Times New Roman', Times, serif !important;
+        }
+        
+        .firebaseui-button {
+            border-radius: 6px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .firebaseui-idp-button {
+            margin-bottom: 15px !important;
+        }
+        
+        .firebaseui-button:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+        }
+        
+        .firebaseui-textfield {
+            border-radius: 6px !important;
+            border: 2px solid #e2e8f0 !important;
+            padding: 14px 16px !important;
+            font-size: 16px !important;
+        }
+        
+        .firebaseui-textfield:focus {
+            border-color: #16a085 !important;
+            box-shadow: 0 0 0 3px rgba(22, 160, 133, 0.1) !important;
+        }
+        
+        .firebaseui-form-actions .firebaseui-button {
+            background: linear-gradient(135deg, #16a085 0%, #27ae60 100%) !important;
+            border: none !important;
+        }
+        
+        .firebaseui-title {
+            color: #1a365d !important;
+            font-size: 18px !important;
+            margin-bottom: 20px !important;
+        }
+        
+        .firebaseui-subtitle {
+            color: #666 !important;
+            font-size: 14px !important;
+        }
+        
+        /* Hide elements not needed for registration flow */
+        .firebaseui-form-links,
+        .firebaseui-tos {
+            display: none !important;
+        }
+        
+        /* Enhanced Professional FirebaseUI Styling */
+        .firebaseui-container {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            max-width: 100% !important;
+            box-shadow: none !important;
+        }
+        
+        .firebaseui-card-header {
+            padding: 24px 0 20px 0 !important;
+        }
+        
+        .firebaseui-title {
+            color: #1a365d !important;
+            font-size: 22px !important;
+            font-weight: 700 !important;
+            margin-bottom: 8px !important;
+            text-align: center !important;
+            letter-spacing: -0.025em !important;
+        }
+        
+        .firebaseui-subtitle {
+            color: #6b7280 !important;
+            font-size: 15px !important;
+            margin-bottom: 32px !important;
+            text-align: center !important;
+            line-height: 1.5 !important;
+        }
+        
+        /* Professional Button Styling */
+        .firebaseui-idp-button {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+            border: none !important;
+            border-radius: 12px !important;
+            color: #fff !important;
+            font-weight: 600 !important;
+            font-size: 16px !important;
+            padding: 16px 24px !important;
+            margin-bottom: 16px !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.2) !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+        
+        .firebaseui-idp-button::before {
+            content: '' !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: -100% !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent) !important;
+            transition: left 0.5s !important;
+        }
+        
+        .firebaseui-idp-button:hover::before {
+            left: 100% !important;
+        }
+        
+        .firebaseui-idp-button:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 25px 0 rgba(16, 185, 129, 0.35) !important;
+        }
+        
+        .firebaseui-idp-button:active {
+            transform: translateY(0) !important;
+            box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.2) !important;
+        }
+        
+        /* Form Action Buttons */
+        .firebaseui-form-actions .firebaseui-button {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+            border: none !important;
+            color: #fff !important;
+            border-radius: 12px !important;
+            padding: 16px 32px !important;
+            font-size: 16px !important;
+            font-weight: 600 !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            text-transform: none !important;
+            box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.2) !important;
+            position: relative !important;
+            overflow: hidden !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            line-height: 1.2 !important;
+            min-height: 48px !important;
+        }
+        
+        .firebaseui-form-actions .firebaseui-button::before {
+            content: '' !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: -100% !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent) !important;
+            transition: left 0.5s !important;
+        }
+        
+        .firebaseui-form-actions .firebaseui-button:hover::before {
+            left: 100% !important;
+        }
+        
+        .firebaseui-form-actions .firebaseui-button:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 25px 0 rgba(16, 185, 129, 0.35) !important;
+        }
+        
+        /* Fix button text alignment */
+        .firebaseui-form-actions .firebaseui-button .firebaseui-button-text {
+            display: block !important;
+            width: 100% !important;
+            text-align: center !important;
+            line-height: 1.2 !important;
+            position: relative !important;
+            z-index: 2 !important;
+        }
+        
+        /* Override FirebaseUI form actions layout */
+        .firebaseui-form-actions {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 100% !important;
+            gap: 10px !important;
+        }
+        
+        /* Secondary buttons (like Cancel) */
+        .firebaseui-form-actions .firebaseui-id-secondary-link {
+            background: #6b7280 !important;
+            color: #fff !important;
+            padding: 12px 24px !important;
+            border-radius: 10px !important;
+            text-decoration: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-weight: 600 !important;
+            transition: all 0.2s ease !important;
+            min-height: 44px !important;
+        }
+        
+        .firebaseui-form-actions .firebaseui-id-secondary-link:hover {
+            background: #4b5563 !important;
+            transform: translateY(-1px) !important;
+        }
+        
+        /* Text Input Fields - Fix overlapping issue with floating placeholders */
+        .firebaseui-textfield {
+            position: relative !important;
+            display: block !important;
+            width: 100% !important;
+            margin: 20px 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+        
+        .firebaseui-input {
+            position: relative !important;
+            box-sizing: border-box !important;
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 8px !important;
+            padding: 20px 16px 8px 16px !important;
+            font-size: 16px !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            background: #ffffff !important;
+            transition: all 0.2s ease-in-out !important;
+            font-weight: 400 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+            color: #374151 !important;
+            line-height: 1.5 !important;
+        }
+        
+        .firebaseui-input:focus {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1), 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+            outline: none !important;
+            background: #ffffff !important;
+        }
+        
+        .firebaseui-input:hover:not(:focus) {
+            border-color: #6b7280 !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        /* Hide default placeholders */
+        .firebaseui-input::placeholder {
+            color: transparent !important;
+            opacity: 0 !important;
+        }
+        
+        /* Floating label styles */
+        .firebaseui-textfield::before {
+            content: attr(data-placeholder) !important;
+            position: absolute !important;
+            left: 16px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            color: #9ca3af !important;
+            font-size: 16px !important;
+            font-weight: 400 !important;
+            pointer-events: none !important;
+            transition: all 0.2s ease-in-out !important;
+            background: transparent !important;
+            z-index: 1 !important;
+        }
+        
+        .firebaseui-textfield.focused::before,
+        .firebaseui-textfield.has-content::before {
+            top: 8px !important;
+            transform: translateY(0) !important;
+            font-size: 12px !important;
+            color: #10b981 !important;
+            font-weight: 500 !important;
+            background: #ffffff !important;
+            padding: 0 4px !important;
+            border-radius: 2px !important;
+        }
+        
+        /* Input container styling */
+        .firebaseui-element-container {
+            margin-bottom: 20px !important;
+        }
+        
+        /* Input wrapper for better spacing */
+        .firebaseui-textfield-wrapper {
+            position: relative !important;
+        }
+        
+        /* Labels */
+        .firebaseui-label {
+            color: #374151 !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            margin-bottom: 8px !important;
+            display: block !important;
+            letter-spacing: 0.025em !important;
+        }
+        
+        /* Enhanced label styling for required fields */
+        .firebaseui-label[for*="email"]::after,
+        .firebaseui-label[for*="password"]::after,
+        .firebaseui-label[for*="phone"]::after,
+        .firebaseui-label[for*="name"]::after {
+            content: " *" !important;
+            color: #dc2626 !important;
+            font-weight: 600 !important;
+        }
+        
+        /* Error Messages */
+        .firebaseui-error {
+            color: #dc2626 !important;
+            font-size: 13px !important;
+            margin-top: 6px !important;
+            font-weight: 500 !important;
+        }
+        
+        /* Progress Bar */
+        .firebaseui-busy-indicator {
+            border-color: #16a085 transparent #16a085 transparent !important;
+        }
+        
+        /* Phone Auth Styling */
+        .firebaseui-country-selector {
+            border: 2px solid #e5e7eb !important;
+            border-radius: 12px !important;
+            background: #f0fdf4 !important;
+            padding: 16px 12px !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            font-weight: 500 !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04) !important;
+        }
+        
+        .firebaseui-country-selector:hover {
+            border-color: #9ca3af !important;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08) !important;
+        }
+        
+        .firebaseui-country-selector:focus {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12) !important;
+            outline: none !important;
+        }
+        
+        .firebaseui-flag {
+            border-radius: 6px !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        /* Phone number input field */
+        .firebaseui-id-phone-number {
+            border: 2px solid #e5e7eb !important;
+            border-radius: 12px !important;
+            padding: 16px 20px !important;
+            font-size: 16px !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            background: #f0fdf4 !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            font-weight: 500 !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04) !important;
+        }
+        
+        .firebaseui-id-phone-number:focus {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12), 0 4px 12px rgba(16, 185, 129, 0.15) !important;
+            outline: none !important;
+            background: #ffffff !important;
+            transform: translateY(-1px) !important;
+        }
+        
+        /* Card Container */
+        .firebaseui-card-content {
+            padding: 0 !important;
+        }
+        
+        .firebaseui-card {
+            background: transparent !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+        }
+        
+        /* Link Styling */
+        .firebaseui-link {
+            color: #16a085 !important;
+            font-weight: 600 !important;
+            text-decoration: none !important;
+        }
+        
+        .firebaseui-link:hover {
+            color: #138870 !important;
+            text-decoration: underline !important;
+        }
+        
+        /* Terms of Service */
+        .firebaseui-tos {
+            font-size: 12px !important;
+            color: #6b7280 !important;
+            text-align: center !important;
+            margin-top: 16px !important;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .firebaseui-idp-button,
+            .firebaseui-form-actions .firebaseui-button {
+                padding: 12px 16px !important;
+                font-size: 14px !important;
+            }
+            
+            .firebaseui-input,
+            .firebaseui-textfield {
+                padding: 12px 14px !important;
+                font-size: 16px !important; /* Prevent zoom on iOS */
+            }
+        }
     </style>
 </head>
 <body>
@@ -534,43 +970,17 @@
                     <p>Create your secure government document account</p>
                 </div>
                 
-                <!-- Email Registration Form -->
-                <form onsubmit="event.preventDefault(); register(email.value, password.value);">
-                    <div class="form-group">
-                        <label for="email">Email Address / ईमेल पता *</label>
-                        <div class="input-container">
-                            <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email address" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="password">Create Password / पासवर्ड बनाएं *</label>
-                        <div class="input-container">
-                            <input type="password" id="password" name="password" class="form-control" placeholder="Create a strong password" required minlength="6">
-                        </div>
-                        
-                        <div class="password-strength">
-                            <div class="strength-indicator">
-                                <div class="strength-bar"></div>
-                                <div class="strength-bar"></div>
-                                <div class="strength-bar"></div>
-                                <div class="strength-bar"></div>
-                            </div>
-                            
-                            <div class="requirements">
-                                <div class="requirement" data-req="length">Minimum 6 characters</div>
-                                <div class="requirement" data-req="letter">Contains letters</div>
-                                <div class="requirement" data-req="number">Contains numbers (recommended)</div>
-                                <div class="requirement" data-req="special">Contains special characters (recommended)</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">🎆 Create Secure Account</button>
-                </form>
+                <!-- FirebaseUI Auth Container -->
+                <div id="firebaseui-auth-container"></div>
+                
+                <!-- Loading Indicator -->
+                <div id="loading-indicator" style="text-align: center; padding: 20px; display: block;">
+                    <div style="display: inline-block; width: 20px; height: 20px; border: 3px solid #16a085; border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite;"></div>
+                    <p style="margin-top: 10px; color: #666;">Loading authentication...</p>
+                </div>
                 
                 <!-- Terms Section -->
-                <div class="terms-section">
+                <div class="terms-section" style="margin-top: 20px;">
                     <h4>🛡️ Security & Privacy Commitment</h4>
                     <ul class="terms-list">
                         <li>End-to-end encryption for all documents</li>
@@ -580,44 +990,13 @@
                     </ul>
                 </div>
                 
-                <!-- Divider -->
-                <div class="divider">
-                    <span>या</span>
-                </div>
-                
-                <!-- Phone OTP Registration -->
-                <div class="otp-section">
-                    <h4>📱 Quick Registration via Mobile OTP</h4>
-                    <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Register instantly using your mobile number</p>
-                    
-                    <div class="form-group">
-                        <label>Mobile Number / मोबाइल नंबर *</label>
-                        <div class="phone-group">
-                            <span class="country-code">+91</span>
-                            <input type="tel" id="phone" class="form-control phone-input" placeholder="Enter 10-digit mobile number" maxlength="10">
-                        </div>
-                    </div>
-                    
-                    <button onclick="sendOTP('+91' + phone.value)" class="btn btn-secondary">📨 Send Registration OTP</button>
-                    
-                    <div class="form-group" style="margin-top: 15px;">
-                        <label for="otp">Enter OTP / OTP दर्ज करें</label>
-                        <div class="otp-group">
-                            <input type="text" id="otp" class="form-control otp-input" placeholder="Enter 6-digit OTP" maxlength="6">
-                            <button onclick="verifyOTP(otp.value)" class="btn btn-primary" style="min-width: 100px;">✓ Register</button>
-                        </div>
-                    </div>
-                    
-                    <div id="recaptcha-container"></div>
-                </div>
-                
                 <div class="security-indicator">
                     Secured by Government of India IT protocols
                 </div>
                 
                 <!-- Links -->
                 <div class="links-section">
-                    <a href="login-new.html">Already Registered? Sign In</a>
+                    <a href="login.html">Already Registered? Sign In</a>
                     <a href="#help">Help & Support</a>
                     <a href="index.html">← Back to Home</a>
                 </div>
@@ -631,71 +1010,202 @@
         <p>Best viewed in Chrome, Firefox, Safari, Edge | Site last updated: Jan 2025</p>
     </footer>
     
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    
+    <!-- FirebaseUI JS -->
+    <script src="https://www.gstatic.com/firebasejs/ui/6.1.0/firebase-ui-auth.js"></script>
+    
     <script>
-        // Password strength checker
-        document.getElementById('password').addEventListener('input', function(e) {
-            const password = e.target.value;
-            const requirements = document.querySelectorAll('.requirement');
-            const strengthBars = document.querySelectorAll('.strength-bar');
-            
-            let strength = 0;
-            
-            // Check length
-            const lengthReq = document.querySelector('[data-req="length"]');
-            if (password.length >= 6) {
-                lengthReq.classList.add('met');
-                strength++;
-            } else {
-                lengthReq.classList.remove('met');
-            }
-            
-            // Check for letters
-            const letterReq = document.querySelector('[data-req="letter"]');
-            if (/[a-zA-Z]/.test(password)) {
-                letterReq.classList.add('met');
-                strength++;
-            } else {
-                letterReq.classList.remove('met');
-            }
-            
-            // Check for numbers
-            const numberReq = document.querySelector('[data-req="number"]');
-            if (/[0-9]/.test(password)) {
-                numberReq.classList.add('met');
-                strength++;
-            } else {
-                numberReq.classList.remove('met');
-            }
-            
-            // Check for special characters
-            const specialReq = document.querySelector('[data-req="special"]');
-            if (/[^a-zA-Z0-9]/.test(password)) {
-                specialReq.classList.add('met');
-                strength++;
-            } else {
-                specialReq.classList.remove('met');
-            }
-            
-            // Update strength bars
-            strengthBars.forEach((bar, index) => {
-                if (index < strength) {
-                    bar.classList.add('active');
-                } else {
-                    bar.classList.remove('active');
-                }
-            });
-        });
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCw1nHIUj06se1Pj5LSJAHj9qlcQB6qINc",
+            authDomain: "share-gov-docs-213b7.firebaseapp.com",
+            projectId: "share-gov-docs-213b7",
+            storageBucket: "share-gov-docs-213b7.firebasestorage.app",
+            messagingSenderId: "1022578410753",
+            appId: "1:1022578410753:web:8f2927bbdc025cdc6e4700",
+            measurementId: "G-3DZY2Q6TH7"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         
-        // Phone number formatting
-        document.getElementById('phone').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 10) value = value.slice(0, 10);
-            e.target.value = value;
+        // Initialize FirebaseUI
+        const ui = new firebaseui.auth.AuthUI(auth);
+        
+        // FirebaseUI configuration for registration
+        const uiConfig = {
+            callbacks: {
+                signInSuccessWithAuthResult: function(authResult, redirectUrl) {
+                    console.log('Registration successful:', authResult.user);
+                    
+                    // Show success message
+                    const container = document.getElementById('firebaseui-auth-container');
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 30px; background: #e8f5e8; border-radius: 6px; border: 1px solid #c6f6d5;">
+                            <h3 style="color: #16a085; margin-bottom: 15px;">🎉 Registration Successful!</h3>
+                            <p style="color: #333; margin-bottom: 20px;">Welcome to SecureShare Portal! Your account has been created successfully.</p>
+                            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                                <button onclick="window.location.href='dashboard.html'" class="btn btn-primary" style="margin: 0;">📁 Go to Dashboard</button>
+                                <button onclick="window.location.href='login.html'" class="btn" style="background: #6b7280; color: white; margin: 0;">🔑 Sign In</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Redirect after a short delay
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 3000);
+                    
+                    return false; // Prevent automatic redirect
+                },
+                uiShown: function() {
+                    // Hide loading indicator when UI is shown
+                    const loadingIndicator = document.getElementById('loading-indicator');
+                    if (loadingIndicator) {
+                        loadingIndicator.style.display = 'none';
+                    }
+                }
+            },
+            signInFlow: 'popup',
+            signInSuccessUrl: 'dashboard.html',
+            signInOptions: [
+                // Email/password sign-up
+                {
+                    provider: firebase.auth.EmailAuthProvider.PROVIDER_ID,
+                    requireDisplayName: true
+                },
+                // Phone authentication
+                {
+                    provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+                    recaptchaParameters: {
+                        type: 'image',
+                        size: 'normal',
+                        badge: 'bottomleft'
+                    },
+                    defaultCountry: 'IN',
+                    defaultNationalNumber: '',
+                    loginHint: '+91XXXXXXXXXX'
+                }
+            ],
+            tosUrl: 'terms.html',
+            privacyPolicyUrl: 'privacy.html'
+        };
+        
+        // Function to initialize floating placeholders
+        function initializeFloatingPlaceholders() {
+            // Set up floating placeholders for Firebase UI inputs
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            // Find all textfield elements
+                            const textfields = node.querySelectorAll ? 
+                                node.querySelectorAll('.firebaseui-textfield') : 
+                                (node.classList && node.classList.contains('firebaseui-textfield') ? [node] : []);
+                            
+                            textfields.forEach((textfield) => {
+                                const input = textfield.querySelector('.firebaseui-input');
+                                if (input && !textfield.dataset.initialized) {
+                                    textfield.dataset.initialized = 'true';
+                                    
+                                    // Get placeholder text from input
+                                    const placeholder = input.getAttribute('placeholder') || input.getAttribute('aria-label') || '';
+                                    
+                                    // Set custom placeholders based on input type or name
+                                    let customPlaceholder = placeholder;
+                                    if (input.type === 'email' || input.name === 'email') {
+                                        customPlaceholder = 'Email Address';
+                                    } else if (input.type === 'password' || input.name === 'password') {
+                                        customPlaceholder = 'Password';
+                                    } else if (input.type === 'tel' || input.name === 'phoneNumber') {
+                                        customPlaceholder = 'Phone Number';
+                                    } else if (input.name === 'displayName') {
+                                        customPlaceholder = 'Full Name';
+                                    }
+                                    
+                                    textfield.setAttribute('data-placeholder', customPlaceholder);
+                                    
+                                    // Handle focus events
+                                    input.addEventListener('focus', () => {
+                                        textfield.classList.add('focused');
+                                    });
+                                    
+                                    input.addEventListener('blur', () => {
+                                        textfield.classList.remove('focused');
+                                        if (input.value.trim()) {
+                                            textfield.classList.add('has-content');
+                                        } else {
+                                            textfield.classList.remove('has-content');
+                                        }
+                                    });
+                                    
+                                    // Handle input events
+                                    input.addEventListener('input', () => {
+                                        if (input.value.trim()) {
+                                            textfield.classList.add('has-content');
+                                        } else {
+                                            textfield.classList.remove('has-content');
+                                        }
+                                    });
+                                    
+                                    // Initial check for pre-filled values
+                                    if (input.value && input.value.trim()) {
+                                        textfield.classList.add('has-content');
+                                    }
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+            
+            // Start observing the Firebase UI container
+            const container = document.getElementById('firebaseui-auth-container');
+            if (container) {
+                observer.observe(container, {
+                    childList: true,
+                    subtree: true
+                });
+            }
+        }
+
+        // Function to start FirebaseUI
+        function startFirebaseUI() {
+            console.log('Starting FirebaseUI registration...');
+            try {
+                ui.start('#firebaseui-auth-container', uiConfig);
+                console.log('FirebaseUI started successfully');
+                
+                // Initialize floating placeholders after a short delay
+                setTimeout(() => {
+                    initializeFloatingPlaceholders();
+                }, 500);
+            } catch (error) {
+                console.error('Error starting FirebaseUI:', error);
+                
+                // Show fallback UI
+                const container = document.getElementById('firebaseui-auth-container');
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 20px; border: 2px dashed #ccc; border-radius: 8px;">
+                        <h3 style="color: #666; margin-bottom: 15px;">🔧 Registration Unavailable</h3>
+                        <p style="color: #666; margin-bottom: 20px;">There was an issue loading the registration system.</p>
+                        <button onclick="window.location.reload()" class="btn btn-primary">🔄 Reload Page</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Auto-start when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Start FirebaseUI after a short delay
+            setTimeout(() => {
+                startFirebaseUI();
+            }, 1000);
         });
     </script>
-    
-    <script type="module" src="/assets/js/logger.js"></script>
-    <script type="module" src="/assets/js/auth.js"></script>
-    <script type="module" src="/assets/js/otp.js"></script>
 </body>
 </html>

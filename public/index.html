@@ -3,13 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Share - Government Document Management</title>
-    
-    <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏛️</text></svg>">
-    
-    <!-- CSS Styling -->
+    <title>SecureShare Portal - Government Document Management System</title>
+    <link rel="icon" href="data:image/svg+xml,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3e%3ctext y=%22.9em%22 font-size=%2290%22%3e🏛️%3c/text%3e%3c/svg%3e">
     <style>
+        /* Government Portal Professional Styling */
         * {
             margin: 0;
             padding: 0;
@@ -17,275 +14,564 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Times New Roman', Times, serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             min-height: 100vh;
             color: #333;
+            line-height: 1.6;
         }
         
-        .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 1rem 0;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        /* Government Header */
+        .gov-header {
+            background: #fff;
+            border-bottom: 4px solid #ff6b35;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
-        .container {
+        .header-top {
+            background: #1a365d;
+            color: white;
+            padding: 8px 0;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .header-main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 2rem;
+            padding: 15px 40px;
         }
         
-        .nav {
+        .logo-section {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 15px;
         }
         
-        .logo {
+        .emblem {
+            width: 60px;
+            height: 60px;
+            background: #ff6b35;
+            border-radius: 50%;
             display: flex;
             align-items: center;
-            font-size: 1.8rem;
+            justify-content: center;
+            font-size: 30px;
+            color: white;
+        }
+        
+        .title-section h1 {
+            color: #1a365d;
+            font-size: 24px;
             font-weight: bold;
-            color: #2c3e50;
+            margin-bottom: 4px;
         }
         
-        .logo::before {
-            content: '🏛️';
-            margin-right: 0.5rem;
+        .title-section .subtitle {
+            color: #666;
+            font-size: 14px;
+            font-style: italic;
         }
         
-        .nav-links {
+        .nav-controls {
             display: flex;
-            gap: 1rem;
+            gap: 15px;
+            align-items: center;
         }
         
+        .lang-selector {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, #1a365d 0%, #2d5aa0 100%);
+            color: white;
+            padding: 80px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="%23ffffff" opacity="0.1"/></svg>') repeat;
+            background-size: 50px 50px;
+        }
+        
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 40px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .hero-subtitle {
+            font-size: 1.4rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #4ade80;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .hero-buttons {
+            margin-top: 40px;
+        }
+        
+        /* Button Styling */
         .btn {
-            padding: 0.75rem 1.5rem;
+            padding: 14px 28px;
             border: none;
-            border-radius: 8px;
-            font-size: 1rem;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
             text-decoration: none;
             display: inline-block;
             text-align: center;
             transition: all 0.3s ease;
-            font-weight: 500;
+            font-family: inherit;
+            margin: 0 8px 8px 0;
         }
         
         .btn-primary {
-            background: #3498db;
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
             color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
         }
         
         .btn-primary:hover {
-            background: #2980b9;
             transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
         }
         
         .btn-secondary {
-            background: #95a5a6;
+            background: transparent;
             color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
         }
         
         .btn-secondary:hover {
-            background: #7f8c8d;
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.5);
             transform: translateY(-2px);
         }
         
-        .hero {
+        /* Features Section */
+        .features-section {
+            background: white;
+            padding: 80px 0;
+        }
+        
+        .section-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+        
+        .section-header {
             text-align: center;
-            padding: 4rem 0;
-            color: white;
+            margin-bottom: 60px;
         }
         
-        .hero h1 {
+        .section-title {
+            font-size: 2.5rem;
+            color: #1a365d;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .section-subtitle {
+            font-size: 1.2rem;
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+        
+        .feature-card {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: left;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border-left: 4px solid #ff6b35;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .feature-icon {
             font-size: 3rem;
-            margin-bottom: 1rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            display: block;
         }
         
-        .hero p {
-            font-size: 1.3rem;
-            margin-bottom: 2rem;
+        .feature-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #1a365d;
+            font-weight: bold;
+        }
+        
+        .feature-description {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        /* Security Section */
+        .security-section {
+            background: linear-gradient(135deg, #16a085 0%, #27ae60 100%);
+            color: white;
+            padding: 80px 0;
+            text-align: center;
+        }
+        
+        .security-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+        
+        .security-item {
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .security-item h4 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        
+        .security-item p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        /* Call to Action */
+        .cta-section {
+            background: linear-gradient(135deg, #1a365d 0%, #2d5aa0 100%);
+            color: white;
+            padding: 80px 0;
+            text-align: center;
+        }
+        
+        .cta-title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .cta-subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
             opacity: 0.9;
             max-width: 600px;
             margin-left: auto;
             margin-right: auto;
         }
         
-        .features {
-            background: white;
-            padding: 4rem 0;
-        }
-        
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-        
-        .feature-card {
-            background: #f8f9fa;
-            padding: 2rem;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-        
-        .feature-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: #2c3e50;
-        }
-        
-        .feature-card p {
-            color: #7f8c8d;
-            line-height: 1.6;
-        }
-        
-        .cta {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            color: white;
-            padding: 4rem 0;
-            text-align: center;
-        }
-        
-        .cta h2 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .cta p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
-        
-        .footer {
-            background: #2c3e50;
+        /* Footer */
+        .gov-footer {
+            background: #1a365d;
             color: white;
             text-align: center;
-            padding: 2rem 0;
+            padding: 40px 0 20px 0;
         }
         
-        .footer p {
-            opacity: 0.8;
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 40px;
         }
         
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .footer-links a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+            text-decoration: underline;
+        }
+        
+        .footer-info {
+            font-size: 12px;
+            opacity: 0.7;
+            line-height: 1.5;
+        }
+        
+        /* Responsive Design */
         @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2rem;
+            .header-main {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
             }
             
-            .hero p {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .hero-subtitle {
                 font-size: 1.1rem;
             }
             
-            .nav-links {
-                flex-direction: column;
-                gap: 0.5rem;
+            .hero-stats {
+                gap: 20px;
             }
             
-            .container {
-                padding: 0 1rem;
+            .section-content,
+            .hero-content,
+            .footer-content {
+                padding: 0 20px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .security-features {
+                grid-template-columns: 1fr;
+            }
+            
+            .footer-links {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .btn {
+                display: block;
+                margin: 10px 0;
+                width: 100%;
             }
         }
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <nav class="nav">
-                <div class="logo">SecureShare</div>
-                <div class="nav-links">
-                    <a href="login.html" class="btn btn-secondary">Login</a>
-                    <a href="register.html" class="btn btn-primary">Register</a>
+    <!-- Government Header -->
+    <header class="gov-header">
+        <div class="header-top">
+            🇮🇳 Government of India | भारत सरकार
+        </div>
+        <div class="header-main">
+            <div class="logo-section">
+                <div class="emblem">🏛️</div>
+                <div class="title-section">
+                    <h1>SecureShare Portal</h1>
+                    <p class="subtitle">National Document Management System</p>
                 </div>
-            </nav>
+            </div>
+            <div class="nav-controls">
+                <select class="lang-selector">
+                    <option>English</option>
+                    <option>हिन्दी</option>
+                </select>
+                <a href="login.html" class="btn btn-secondary">Sign In</a>
+                <a href="register.html" class="btn btn-primary">Register</a>
+            </div>
         </div>
     </header>
     
-    <main>
-        <section class="hero">
-            <div class="container">
-                <h1>Secure Government Document Sharing</h1>
-                <p>Store, organize, and securely share your important government documents with family members. Built with enterprise-grade security for Indian families.</p>
-                <div style="margin-top: 2rem;">
-                    <a href="register.html" class="btn btn-primary" style="margin-right: 1rem;">Get Started</a>
-                    <a href="login.html" class="btn btn-secondary">Sign In</a>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">Digital India Document Portal</h1>
+            <p class="hero-subtitle">Secure, government-approved platform for storing and sharing your important documents with family members. Bank-grade security meets government compliance.</p>
+            
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-number">500K+</span>
+                    <span class="stat-label">Registered Families</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">2M+</span>
+                    <span class="stat-label">Documents Secured</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">100%</span>
+                    <span class="stat-label">Data Protection</span>
                 </div>
             </div>
-        </section>
-        
-        <section class="features">
-            <div class="container">
-                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 1rem; color: #2c3e50;">Why Choose SecureShare?</h2>
-                <p style="text-align: center; font-size: 1.2rem; color: #7f8c8d; margin-bottom: 3rem;">Built specifically for Indian families to manage government documents securely</p>
-                
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <div class="feature-icon">🔒</div>
-                        <h3>Bank-Level Security</h3>
-                        <p>Your documents are encrypted and stored with the same security standards used by banks. Firebase Authentication ensures only you can access your files.</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">📄</div>
-                        <h3>Smart Document Detection</h3>
-                        <p>Automatically categorizes your documents - Aadhaar, PAN, Passport, Driving License, and more. No manual sorting required.</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">👨‍👩‍👧‍👦</div>
-                        <h3>Family Sharing</h3>
-                        <p>Securely share specific documents with family members. Perfect for parents sharing documents with children or spouses.</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">📱</div>
-                        <h3>Mobile Friendly</h3>
-                        <p>Access your documents from any device - phone, tablet, or computer. Responsive design works everywhere.</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">📊</div>
-                        <h3>Activity Tracking</h3>
-                        <p>Complete audit trail of who accessed what and when. Know exactly when documents are viewed or shared.</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">☁️</div>
-                        <h3>Cloud Backup</h3>
-                        <p>Your documents are safely backed up in the cloud. Never lose important documents due to device failure.</p>
-                    </div>
-                </div>
+            
+            <div class="hero-buttons">
+                <a href="register.html" class="btn btn-primary">🎆 Start Free Registration</a>
+                <a href="login.html" class="btn btn-secondary">🔐 Citizen Login</a>
             </div>
-        </section>
-        
-        <section class="cta">
-            <div class="container">
-                <h2>Ready to Secure Your Documents?</h2>
-                <p>Join thousands of Indian families who trust SecureShare with their important documents</p>
-                <a href="register.html" class="btn" style="background: white; color: #e74c3c; font-size: 1.2rem; padding: 1rem 2rem;">Create Free Account</a>
-            </div>
-        </section>
-    </main>
+        </div>
+    </section>
     
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2025 SecureShare - Government Document Management. Built for Digital India.</p>
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="section-content">
+            <div class="section-header">
+                <h2 class="section-title">Why Choose SecureShare Portal?</h2>
+                <p class="section-subtitle">Developed under Digital India Initiative with world-class security standards for Indian families</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3 class="feature-title">Government-Grade Security</h3>
+                    <p class="feature-description">256-bit encryption, Firebase Authentication, and compliance with IT Act 2000. Your documents are protected with the same security standards used by government agencies.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📄</div>
+                    <h3 class="feature-title">Smart Document Recognition</h3>
+                    <p class="feature-description">Automatically categorizes Aadhaar, PAN, Passport, Driving License, Voter ID, and other government documents. AI-powered organization saves your time.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">👨‍👩‍👧‍👦</div>
+                    <h3 class="feature-title">Family Document Sharing</h3>
+                    <p class="feature-description">Securely share specific documents with family members. Perfect for parents, spouses, and children to access important documents when needed.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3 class="feature-title">Multi-Device Access</h3>
+                    <p class="feature-description">Access from phone, tablet, or computer. Responsive design works on all devices with offline document viewing capabilities.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3 class="feature-title">Complete Audit Trail</h3>
+                    <p class="feature-description">Track every document access, share, and download. Complete transparency about who accessed what documents and when.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">☁️</div>
+                    <h3 class="feature-title">Secure Cloud Backup</h3>
+                    <p class="feature-description">Documents are securely backed up with redundancy. Never lose important documents due to device failure or damage.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Security Section -->
+    <section class="security-section">
+        <div class="section-content">
+            <div class="section-header">
+                <h2 class="section-title">🔒 Security & Compliance</h2>
+                <p class="section-subtitle">Built with government-approved security standards and compliance frameworks</p>
+            </div>
+            
+            <div class="security-features">
+                <div class="security-item">
+                    <h4>🏛️ Government Approved</h4>
+                    <p>Compliant with Digital India guidelines and government security protocols</p>
+                </div>
+                <div class="security-item">
+                    <h4>🔐 End-to-End Encryption</h4>
+                    <p>256-bit AES encryption ensures your documents are secure in transit and at rest</p>
+                </div>
+                <div class="security-item">
+                    <h4>🏦 Banking Standards</h4>
+                    <p>Same security infrastructure used by leading banks and financial institutions</p>
+                </div>
+                <div class="security-item">
+                    <h4>📋 IT Act 2000 Compliant</h4>
+                    <p>Fully compliant with Indian cyber security laws and data protection regulations</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Call to Action -->
+    <section class="cta-section">
+        <div class="section-content">
+            <h2 class="cta-title">Ready to Secure Your Documents?</h2>
+            <p class="cta-subtitle">Join lakhs of Indian families who trust SecureShare Portal for their important government documents</p>
+            <a href="register.html" class="btn btn-primary">🎆 Create Free Account</a>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="gov-footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#privacy">Privacy Policy</a>
+                <a href="#terms">Terms of Service</a>
+                <a href="#help">Help & Support</a>
+                <a href="#contact">Contact Us</a>
+                <a href="#about">About Portal</a>
+            </div>
+            <div class="footer-info">
+                <p>© 2025 Government of India | Developed under Digital India Initiative</p>
+                <p>SecureShare Portal - National Document Management System</p>
+                <p>Best viewed in Chrome, Firefox, Safari, Edge | Last Updated: January 2025</p>
+            </div>
         </div>
     </footer>
 </body>

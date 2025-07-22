@@ -66,7 +66,7 @@ const uploadDoc = async () => {
     const file = fileInput.files[0];
     
     if (!file) {
-      alert('Please select a file first');
+      showNotification('Please select a file first', 'error');
       return;
     }
     
@@ -74,59 +74,103 @@ const uploadDoc = async () => {
     validateFile(file);
     
     if (!auth.currentUser) {
-      alert('Please login first');
+      showNotification('Please login first', 'error');
       window.location.href = 'login.html';
       return;
     }
     
+    // Check if encryption is available
+    if (!DocumentEncryption.isEncryptionAvailable()) {
+      showNotification('Encryption library not loaded. Please refresh the page.', 'error');
+      return;
+    }
+    
     // Add loading indicator
-    const uploadBtn = document.querySelector('button');
-    uploadBtn.disabled = true;
-    uploadBtn.textContent = 'Uploading...';
+    const uploadBtn = document.querySelector('.btn-upload');
+    if (uploadBtn) {
+      uploadBtn.disabled = true;
+      uploadBtn.innerHTML = '⏳ Encrypting & Uploading...';
+    }
     
-    // Create unique filename with timestamp
+    showNotification('🔒 Encrypting document...', 'info');
+    
+    // Read file as ArrayBuffer
+    const fileArrayBuffer = await file.arrayBuffer();
+    
+    // Generate encryption password based on user credentials
+    const encryptionPassword = documentEncryption.generateDocumentPassword(
+      auth.currentUser.email,
+      auth.currentUser.uid
+    );
+    
+    // Encrypt the document
+    const encryptionResult = documentEncryption.encryptDocument(fileArrayBuffer, encryptionPassword);
+    
+    if (!encryptionResult.success) {
+      throw new Error(`Encryption failed: ${encryptionResult.error}`);
+    }
+    
+    showNotification('📤 Uploading encrypted document...', 'info');
+    
+    // Create unique filename with timestamp and .encrypted extension
     const timestamp = new Date().getTime();
-    const fileName = `${timestamp}_${file.name}`;
-    const storageRef = ref(storage, `documents/${auth.currentUser.uid}/${fileName}`);
+    const encryptedFileName = `${timestamp}_${file.name}.encrypted`;
+    const storageRef = ref(storage, `documents/${auth.currentUser.uid}/${encryptedFileName}`);
     
-    await uploadBytes(storageRef, file);
+    // Upload encrypted data
+    await uploadBytes(storageRef, encryptionResult.encryptedData);
     const url = await getDownloadURL(storageRef);
     
-    // Detect document type
+    // Detect document type from original filename
     const docType = detectDocumentType(file.name);
     
+    // Store document metadata in Firestore (no sensitive data)
     await addDoc(collection(db, 'documents'), {
       uid: auth.currentUser.uid,
-      name: file.name,
-      fileName: fileName,
-      url,
+      name: file.name, // Original filename (not encrypted)
+      fileName: encryptedFileName, // Encrypted filename for storage
+      url, // Download URL for encrypted file
       type: docType,
-      fileSize: file.size,
-      mimeType: file.type,
+      originalSize: file.size, // Original file size
+      encryptedSize: encryptionResult.size, // Encrypted file size
+      mimeType: file.type, // Original MIME type
+      encrypted: true, // Flag to indicate this is an encrypted document
+      encryptionSalt: encryptionResult.salt, // Store salt for decryption
       uploadedAt: new Date().toISOString(),
       sharedWith: [] // Array to track who document is shared with
     });
     
-    logAction('Document Uploaded', { name: file.name, fileName });
-    alert('Document uploaded successfully!');
+    logAction('Encrypted Document Uploaded', { 
+      name: file.name, 
+      fileName: encryptedFileName, 
+      docType,
+      originalSize: file.size,
+      encryptedSize: encryptionResult.size
+    });
+    
+    showNotification(`🎉 Document "${file.name}" encrypted and uploaded successfully!`, 'success');
     
     // Clear file input and reload documents
     fileInput.value = '';
     loadUserDocuments();
     
     // Reset button
-    uploadBtn.disabled = false;
-    uploadBtn.textContent = 'Upload';
+    if (uploadBtn) {
+      uploadBtn.disabled = false;
+      uploadBtn.innerHTML = '🔒 Upload Encrypted Document';
+    }
     
   } catch (error) {
     console.error('Upload error:', error);
     logAction('Document Upload Failed', error);
-    alert('Failed to upload document: ' + error.message);
+    showNotification('Failed to upload document: ' + error.message, 'error');
     
     // Reset button on error
-    const uploadBtn = document.querySelector('button');
-    uploadBtn.disabled = false;
-    uploadBtn.textContent = 'Upload';
+    const uploadBtn = document.querySelector('.btn-upload');
+    if (uploadBtn) {
+      uploadBtn.disabled = false;
+      uploadBtn.innerHTML = '🔒 Upload Encrypted Document';
+    }
   }
 };
 
@@ -152,13 +196,19 @@ const loadUserDocuments = async () => {
       const docData = docSnapshot.data();
       const listItem = document.createElement('li');
       const docTypeDisplay = docData.type ? docData.type.replace('_', ' ').toUpperCase() : 'OTHER';
-      const fileSize = docData.fileSize ? `${(docData.fileSize / 1024 / 1024).toFixed(2)} MB` : 'Unknown';
+      // Use original size if available, otherwise use encrypted size or fallback
+      const sizeToShow = docData.originalSize || docData.fileSize || docData.encryptedSize || 0;
+      const fileSize = sizeToShow ? `${(sizeToShow / 1024 / 1024).toFixed(2)} MB` : 'Unknown';
+      
+      // Add encryption indicator
+      const encryptionBadge = docData.encrypted ? '<span class="doc-type-badge" style="background: #e8f5e8; color: #2e7d2e;">🔒 ENCRYPTED</span>' : '';
       
       listItem.innerHTML = `
         <div class="document-item">
           <div class="doc-header">
             <strong>${docData.name}</strong>
             <span class="doc-type-badge doc-type-${docData.type || 'other'}">${docTypeDisplay}</span>
+            ${encryptionBadge}
           </div>
           <div class="doc-details">
             <small>📅 Uploaded: ${new Date(docData.uploadedAt).toLocaleDateString()}</small><br>
@@ -167,7 +217,7 @@ const loadUserDocuments = async () => {
               `<br><small>👥 Shared with ${docData.sharedWith.length} people</small>` : ''}
           </div>
           <div class="document-actions">
-            <button onclick="viewDocument('${docData.url}')" class="btn-view">👁️ View</button>
+            <button onclick="viewDocument('${docData.url}', '${docSnapshot.id}')" class="btn-view">👁️ ${docData.encrypted ? 'Decrypt & View' : 'View'}</button>
             <button onclick="deleteDocument('${docSnapshot.id}', '${docData.fileName}')" class="btn-delete">🗑️ Delete</button>
             <button onclick="shareDocument('${docSnapshot.id}')" class="btn-share">📤 Share</button>
           </div>
@@ -184,9 +234,11 @@ const loadUserDocuments = async () => {
 };
 
 const deleteDocument = async (docId, fileName) => {
-  if (!confirm('Are you sure you want to delete this document?')) return;
+  if (!confirm('⚠️ Are you sure you want to delete this document?\n\nThis action cannot be undone.')) return;
   
   try {
+    showNotification('🗑️ Deleting document...', 'info');
+    
     // Delete from Firestore
     await deleteDoc(doc(db, 'documents', docId));
     
@@ -194,40 +246,173 @@ const deleteDocument = async (docId, fileName) => {
     const storageRef = ref(storage, `documents/${auth.currentUser.uid}/${fileName}`);
     await deleteObject(storageRef);
     
+    // Also delete any shared document references
+    const sharedQuery = query(
+      collection(db, 'sharedDocs'),
+      where('docId', '==', docId)
+    );
+    const sharedDocs = await getDocs(sharedQuery);
+    
+    // Delete all shared document references
+    const deletePromises = sharedDocs.docs.map(sharedDoc => 
+      deleteDoc(doc(db, 'sharedDocs', sharedDoc.id))
+    );
+    await Promise.all(deletePromises);
+    
     logAction('Document Deleted', { docId, fileName });
-    alert('Document deleted successfully!');
+    showNotification('✅ Document deleted successfully!', 'success');
     loadUserDocuments();
+    loadSharedDocuments(); // Refresh shared docs too
+    
   } catch (error) {
     console.error('Delete error:', error);
     logAction('Document Delete Failed', error);
-    alert('Failed to delete document: ' + error.message);
+    showNotification('Failed to delete document: ' + error.message, 'error');
   }
 };
 
-const viewDocument = (url) => {
-  window.open(url, '_blank');
-  logAction('Document Viewed', { url });
+const viewDocument = async (url, docId = null) => {
+  try {
+    // If docId is provided, check if it's an encrypted document
+    if (docId) {
+      const docQuery = query(
+        collection(db, 'documents'),
+        where('__name__', '==', docId)
+      );
+      const docSnapshot = await getDocs(docQuery);
+      
+      if (!docSnapshot.empty) {
+        const docData = docSnapshot.docs[0].data();
+        
+        if (docData.encrypted) {
+          await viewEncryptedDocument(url, docData);
+          return;
+        }
+      }
+    }
+    
+    // For non-encrypted documents, open directly
+    window.open(url, '_blank');
+    logAction('Document Viewed', { url });
+    
+  } catch (error) {
+    console.error('Error viewing document:', error);
+    showNotification('Failed to open document: ' + error.message, 'error');
+  }
+};
+
+const viewEncryptedDocument = async (url, docData) => {
+  try {
+    showNotification('🔒 Decrypting document...', 'info');
+    
+    // Download encrypted file
+    const response = await fetch(url);
+    const encryptedArrayBuffer = await response.arrayBuffer();
+    
+    // Generate decryption password
+    const decryptionPassword = documentEncryption.generateDocumentPassword(
+      auth.currentUser.email,
+      auth.currentUser.uid
+    );
+    
+    // Decrypt the document
+    const decryptionResult = documentEncryption.decryptDocument(
+      encryptedArrayBuffer, 
+      decryptionPassword
+    );
+    
+    if (!decryptionResult.success) {
+      throw new Error(decryptionResult.error);
+    }
+    
+    // Create a blob from decrypted data
+    const decryptedBlob = new Blob([decryptionResult.decryptedData], {
+      type: docData.mimeType
+    });
+    
+    // Create a temporary URL for the decrypted document
+    const tempUrl = URL.createObjectURL(decryptedBlob);
+    
+    // Open in new window
+    const newWindow = window.open(tempUrl, '_blank');
+    
+    // Clean up the temporary URL after a delay
+    setTimeout(() => {
+      URL.revokeObjectURL(tempUrl);
+    }, 60000); // Clean up after 1 minute
+    
+    logAction('Encrypted Document Viewed', { 
+      originalName: docData.name,
+      docType: docData.type
+    });
+    
+    showNotification('✅ Document decrypted and opened!', 'success');
+    
+  } catch (error) {
+    console.error('Decryption error:', error);
+    logAction('Document Decryption Failed', { error: error.message });
+    showNotification('Failed to decrypt document: ' + error.message, 'error');
+  }
 };
 
 const shareDocument = async (docId) => {
-  const recipientUID = prompt('Enter the UID of the person you want to share with:');
-  if (!recipientUID) return;
+  const recipientEmail = prompt('Enter the email address of the person you want to share with:');
+  if (!recipientEmail) return;
+  
+  // Validate email format
+  if (!validateEmail(recipientEmail)) {
+    showNotification('Please enter a valid email address.', 'error');
+    return;
+  }
   
   try {
+    // First, find the user by email
+    const usersQuery = query(
+      collection(db, 'users'),
+      where('email', '==', recipientEmail)
+    );
+    const userSnapshot = await getDocs(usersQuery);
+    
+    if (userSnapshot.empty) {
+      showNotification('No user found with that email address. Please make sure they are registered.', 'error');
+      return;
+    }
+    
+    const recipientUser = userSnapshot.docs[0];
+    const recipientUID = recipientUser.id;
+    
+    // Check if document is already shared with this user
+    const existingShareQuery = query(
+      collection(db, 'sharedDocs'),
+      where('docId', '==', docId),
+      where('ownerId', '==', auth.currentUser.uid),
+      where('sharedWith', '==', recipientUID)
+    );
+    const existingShareSnapshot = await getDocs(existingShareQuery);
+    
+    if (!existingShareSnapshot.empty) {
+      showNotification('Document is already shared with this user.', 'error');
+      return;
+    }
+    
     // Add to shared documents collection
     await addDoc(collection(db, 'sharedDocs'), {
       docId,
       ownerId: auth.currentUser.uid,
+      ownerEmail: auth.currentUser.email,
       sharedWith: recipientUID,
+      sharedWithEmail: recipientEmail,
       sharedAt: new Date().toISOString()
     });
     
-    logAction('Document Shared', { docId, recipientUID });
-    alert('Document shared successfully!');
+    logAction('Document Shared', { docId, recipientEmail, recipientUID });
+    showNotification(`📤 Document shared successfully with ${recipientEmail}!`, 'success');
+    loadUserDocuments(); // Refresh the document list
+    
   } catch (error) {
     console.error('Share error:', error);
     logAction('Document Share Failed', error);
-    alert('Failed to share document: ' + error.message);
+    showNotification('Failed to share document: ' + error.message, 'error');
   }
 };
 

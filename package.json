@@ -39,5 +39,8 @@
   },
   "engines": {
     "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "firebaseui": "^6.1.0"
   }
 }

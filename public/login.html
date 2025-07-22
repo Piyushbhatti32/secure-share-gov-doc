@@ -1,515 +1,1212 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login - Government Document Portal</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏛️</text></svg>">
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏛️</text></svg>"
+    />
+    <!-- FirebaseUI CSS -->
+    <link
+      type="text/css"
+      rel="stylesheet"
+      href="https://www.gstatic.com/firebasejs/ui/6.1.0/firebase-ui-auth.css"
+    />
     <style>
-        /* Government Portal Professional Styling */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Times New Roman', Times, serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* Government Header */
-        .gov-header {
-            background: #fff;
-            border-bottom: 4px solid #ff6b35;
-            padding: 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .header-top {
-            background: #1a365d;
-            color: white;
-            padding: 8px 0;
-            font-size: 12px;
-            text-align: center;
-        }
-        
+      /* Government Portal Professional Styling */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Times New Roman", Times, serif;
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Government Header */
+      .gov-header {
+        background: #fff;
+        border-bottom: 4px solid #ff6b35;
+        padding: 0;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .header-top {
+        background: #1a365d;
+        color: white;
+        padding: 8px 0;
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .header-main {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 15px 40px;
+      }
+
+      .logo-section {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .emblem {
+        width: 60px;
+        height: 60px;
+        background: #ff6b35;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        color: white;
+      }
+
+      .title-section h1 {
+        color: #1a365d;
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 4px;
+      }
+
+      .title-section .subtitle {
+        color: #666;
+        font-size: 14px;
+        font-style: italic;
+      }
+
+      .lang-selector {
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        color: #666;
+      }
+
+      /* Main Content */
+      .main-content {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+      }
+
+      .login-container {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        width: 100%;
+        max-width: 900px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        min-height: 500px;
+      }
+
+      .login-info {
+        background: linear-gradient(135deg, #1a365d 0%, #2d5aa0 100%);
+        color: white;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .login-info h2 {
+        font-size: 28px;
+        margin-bottom: 20px;
+        color: #fff;
+      }
+
+      .feature-list {
+        list-style: none;
+        margin: 20px 0;
+      }
+
+      .feature-list li {
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .feature-list li:before {
+        content: "✓";
+        color: #4ade80;
+        font-weight: bold;
+        margin-right: 10px;
+        font-size: 16px;
+      }
+
+      .security-badge {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 20px;
+        text-align: center;
+        font-size: 12px;
+      }
+
+      .login-form-section {
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .form-header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .form-header h3 {
+        color: #1a365d;
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
+
+      .form-header p {
+        color: #666;
+        font-size: 14px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 600;
+        font-size: 14px;
+      }
+
+      .input-container {
+        position: relative;
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 16px;
+        font-family: inherit;
+        transition: all 0.3s ease;
+        background: #fff;
+      }
+
+      .form-control:focus {
+        outline: none;
+        border-color: #2d5aa0;
+        box-shadow: 0 0 0 3px rgba(45, 90, 160, 0.1);
+      }
+
+      .btn {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: inherit;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #2d5aa0 0%, #1a365d 100%);
+        color: white;
+        margin-bottom: 15px;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(45, 90, 160, 0.3);
+      }
+
+      .divider {
+        text-align: center;
+        margin: 25px 0;
+        position: relative;
+        color: #666;
+        font-size: 14px;
+      }
+
+      .divider::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: #e2e8f0;
+      }
+
+      .divider span {
+        background: white;
+        padding: 0 15px;
+      }
+
+      .otp-section {
+        background: #f8f9fa;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 20px;
+        margin-top: 15px;
+      }
+
+      .otp-section h4 {
+        color: #1a365d;
+        margin-bottom: 15px;
+        font-size: 16px;
+      }
+
+      .phone-group {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 15px;
+      }
+
+      .country-code {
+        background: #e2e8f0;
+        border: 2px solid #e2e8f0;
+        padding: 14px 12px;
+        border-radius: 6px;
+        font-weight: 600;
+        color: #333;
+        font-size: 16px;
+      }
+
+      .phone-input {
+        flex: 1;
+      }
+
+      .otp-group {
+        display: flex;
+        gap: 8px;
+        margin-top: 15px;
+      }
+
+      .otp-input {
+        flex: 1;
+      }
+
+      .btn-secondary {
+        background: #6b7280;
+        color: white;
+        min-width: 100px;
+      }
+
+      .btn-secondary:hover {
+        background: #4b5563;
+        transform: translateY(-1px);
+      }
+
+      .links-section {
+        margin-top: 25px;
+        text-align: center;
+        border-top: 1px solid #e2e8f0;
+        padding-top: 20px;
+      }
+
+      .links-section a {
+        color: #2d5aa0;
+        text-decoration: none;
+        font-size: 14px;
+        margin: 0 15px;
+      }
+
+      .links-section a:hover {
+        text-decoration: underline;
+      }
+
+      /* Footer */
+      .gov-footer {
+        background: #1a365d;
+        color: white;
+        text-align: center;
+        padding: 20px;
+        font-size: 12px;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
         .header-main {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 15px 40px;
+          flex-direction: column;
+          text-align: center;
+          gap: 15px;
         }
-        
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .emblem {
-            width: 60px;
-            height: 60px;
-            background: #ff6b35;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-            color: white;
-        }
-        
-        .title-section h1 {
-            color: #1a365d;
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-        
-        .title-section .subtitle {
-            color: #666;
-            font-size: 14px;
-            font-style: italic;
-        }
-        
-        .lang-selector {
-            background: #f8f9fa;
-            border: 1px solid #ddd;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            color: #666;
-        }
-        
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-        }
-        
+
         .login-container {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-            overflow: hidden;
-            width: 100%;
-            max-width: 900px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            min-height: 500px;
+          grid-template-columns: 1fr;
+          max-width: 500px;
         }
-        
+
         .login-info {
-            background: linear-gradient(135deg, #1a365d 0%, #2d5aa0 100%);
-            color: white;
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+          order: 2;
+          padding: 30px;
         }
-        
-        .login-info h2 {
-            font-size: 28px;
-            margin-bottom: 20px;
-            color: #fff;
-        }
-        
-        .feature-list {
-            list-style: none;
-            margin: 20px 0;
-        }
-        
-        .feature-list li {
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        
-        .feature-list li:before {
-            content: "✓";
-            color: #4ade80;
-            font-weight: bold;
-            margin-right: 10px;
-            font-size: 16px;
-        }
-        
-        .security-badge {
-            background: rgba(255,255,255,0.1);
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            text-align: center;
-            font-size: 12px;
-        }
-        
+
         .login-form-section {
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+          padding: 30px;
         }
-        
-        .form-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .form-header h3 {
-            color: #1a365d;
-            font-size: 24px;
-            margin-bottom: 8px;
-        }
-        
-        .form-header p {
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .input-container {
-            position: relative;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 6px;
-            font-size: 16px;
-            font-family: inherit;
-            transition: all 0.3s ease;
-            background: #fff;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: #2d5aa0;
-            box-shadow: 0 0 0 3px rgba(45, 90, 160, 0.1);
-        }
-        
-        .btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: inherit;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #2d5aa0 0%, #1a365d 100%);
-            color: white;
-            margin-bottom: 15px;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(45, 90, 160, 0.3);
-        }
-        
-        .divider {
-            text-align: center;
-            margin: 25px 0;
-            position: relative;
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .divider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: #e2e8f0;
-        }
-        
-        .divider span {
-            background: white;
-            padding: 0 15px;
-        }
-        
-        .otp-section {
-            background: #f8f9fa;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 20px;
-            margin-top: 15px;
-        }
-        
-        .otp-section h4 {
-            color: #1a365d;
-            margin-bottom: 15px;
-            font-size: 16px;
-        }
-        
+
         .phone-group {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 15px;
+          flex-direction: column;
         }
-        
-        .country-code {
-            background: #e2e8f0;
-            border: 2px solid #e2e8f0;
-            padding: 14px 12px;
-            border-radius: 6px;
-            font-weight: 600;
-            color: #333;
-            font-size: 16px;
-        }
-        
-        .phone-input {
-            flex: 1;
-        }
-        
+
         .otp-group {
-            display: flex;
-            gap: 8px;
-            margin-top: 15px;
+          flex-direction: column;
         }
-        
-        .otp-input {
-            flex: 1;
+      }
+
+      /* Security indicators */
+      .security-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 15px;
+        font-size: 12px;
+        color: #666;
+      }
+
+      .security-indicator:before {
+        content: "🔒";
+        margin-right: 5px;
+      }
+
+      #recaptcha-container {
+        margin-top: 15px;
+      }
+
+      /* Toggle Button Styles */
+      .login-toggle {
+        margin-bottom: 25px;
+      }
+
+      .toggle-container {
+        display: flex;
+        background: #f1f5f9;
+        border-radius: 8px;
+        padding: 4px;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .toggle-btn {
+        flex: 1;
+        padding: 12px 16px;
+        border: none;
+        background: transparent;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        color: #64748b;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .toggle-btn:hover {
+        color: #2d5aa0;
+      }
+
+      .toggle-btn.active {
+        background: white;
+        color: #2d5aa0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
+      }
+
+      /* Login Method Containers */
+      .login-method {
+        display: none;
+        animation: fadeIn 0.3s ease-in-out;
+      }
+
+      .login-method.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
         }
-        
-        .btn-secondary {
-            background: #6b7280;
-            color: white;
-            min-width: 100px;
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
-        
-        .btn-secondary:hover {
-            background: #4b5563;
-            transform: translateY(-1px);
+      }
+
+      /* Remove background from OTP section when used as toggle */
+      .login-method .otp-section {
+        background: transparent;
+        border: none;
+        padding: 0;
+        margin-top: 0;
+      }
+
+      /* Enhanced Professional FirebaseUI Styling */
+      .firebaseui-container {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif !important;
+        max-width: 100% !important;
+        box-shadow: none !important;
+      }
+
+      .firebaseui-card-header {
+        padding: 24px 0 20px 0 !important;
+      }
+
+      .firebaseui-title {
+        color: #1a365d !important;
+        font-size: 22px !important;
+        font-weight: 700 !important;
+        margin-bottom: 8px !important;
+        text-align: center !important;
+        letter-spacing: -0.025em !important;
+      }
+
+      .firebaseui-subtitle {
+        color: #6b7280 !important;
+        font-size: 15px !important;
+        margin-bottom: 32px !important;
+        text-align: center !important;
+        line-height: 1.5 !important;
+      }
+
+      /* Professional Button Styling */
+      .firebaseui-idp-button {
+        background: linear-gradient(
+          135deg,
+          #2563eb 0%,
+          #1d4ed8 100%
+        ) !important;
+        border: none !important;
+        border-radius: 12px !important;
+        color: #fff !important;
+        font-weight: 600 !important;
+        font-size: 16px !important;
+        padding: 16px 24px !important;
+        margin-bottom: 16px !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.2) !important;
+        position: relative !important;
+        overflow: hidden !important;
+      }
+
+      .firebaseui-idp-button::before {
+        content: "" !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: -100% !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        ) !important;
+        transition: left 0.5s !important;
+      }
+
+      .firebaseui-idp-button:hover::before {
+        left: 100% !important;
+      }
+
+      .firebaseui-idp-button:hover {
+        background: linear-gradient(
+          135deg,
+          #1d4ed8 0%,
+          #1e40af 100%
+        ) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 25px 0 rgba(37, 99, 235, 0.35) !important;
+      }
+
+      .firebaseui-idp-button:active {
+        transform: translateY(0) !important;
+        box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.2) !important;
+      }
+
+      /* Form Action Buttons */
+      .firebaseui-form-actions .firebaseui-button {
+        background: linear-gradient(
+          135deg,
+          #2563eb 0%,
+          #1d4ed8 100%
+        ) !important;
+        border: none !important;
+        color: #fff !important;
+        border-radius: 12px !important;
+        padding: 16px 32px !important;
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        text-transform: none !important;
+        box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.2) !important;
+        position: relative !important;
+        overflow: hidden !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        line-height: 1.2 !important;
+        min-height: 48px !important;
+      }
+
+      .firebaseui-form-actions .firebaseui-button::before {
+        content: "" !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: -100% !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        ) !important;
+        transition: left 0.5s !important;
+      }
+
+      .firebaseui-form-actions .firebaseui-button:hover::before {
+        left: 100% !important;
+      }
+
+      .firebaseui-form-actions .firebaseui-button:hover {
+        background: linear-gradient(
+          135deg,
+          #1d4ed8 0%,
+          #1e40af 100%
+        ) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 25px 0 rgba(37, 99, 235, 0.35) !important;
+      }
+
+      /* Fix button text alignment */
+      .firebaseui-form-actions .firebaseui-button .firebaseui-button-text {
+        display: block !important;
+        width: 100% !important;
+        text-align: center !important;
+        line-height: 1.2 !important;
+        position: relative !important;
+        z-index: 2 !important;
+      }
+
+      /* Override FirebaseUI form actions layout */
+      .firebaseui-form-actions {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        gap: 10px !important;
+      }
+
+      /* Secondary buttons (like Cancel) */
+      .firebaseui-form-actions .firebaseui-id-secondary-link {
+        background: #6b7280 !important;
+        color: #fff !important;
+        padding: 12px 24px !important;
+        border-radius: 10px !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease !important;
+        min-height: 44px !important;
+      }
+
+      .firebaseui-form-actions .firebaseui-id-secondary-link:hover {
+        background: #4b5563 !important;
+        transform: translateY(-1px) !important;
+      }
+
+      /* Text Input Fields - Fix overlapping issue with floating placeholders */
+      .firebaseui-textfield {
+        position: relative !important;
+        display: block !important;
+        width: 100% !important;
+        margin: 20px 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+      
+      .firebaseui-input {
+        position: relative !important;
+        box-sizing: border-box !important;
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        border: 1px solid #d1d5db !important;
+        border-radius: 8px !important;
+        padding: 20px 16px 8px 16px !important;
+        font-size: 16px !important;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif !important;
+        background: #ffffff !important;
+        transition: all 0.2s ease-in-out !important;
+        font-weight: 400 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+        color: #374151 !important;
+        line-height: 1.5 !important;
+      }
+
+      .firebaseui-input:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1),
+          0 2px 8px rgba(0, 0, 0, 0.1) !important;
+        outline: none !important;
+        background: #ffffff !important;
+      }
+
+      .firebaseui-input:hover:not(:focus) {
+        border-color: #6b7280 !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+      }
+
+      /* Hide default placeholders */
+      .firebaseui-input::placeholder {
+        color: transparent !important;
+        opacity: 0 !important;
+      }
+      
+      /* Floating label styles */
+      .firebaseui-textfield::before {
+        content: attr(data-placeholder) !important;
+        position: absolute !important;
+        left: 16px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        color: #9ca3af !important;
+        font-size: 16px !important;
+        font-weight: 400 !important;
+        pointer-events: none !important;
+        transition: all 0.2s ease-in-out !important;
+        background: transparent !important;
+        z-index: 1 !important;
+      }
+      
+      .firebaseui-textfield.focused::before,
+      .firebaseui-textfield.has-content::before {
+        top: 8px !important;
+        transform: translateY(0) !important;
+        font-size: 12px !important;
+        color: #2563eb !important;
+        font-weight: 500 !important;
+        background: #ffffff !important;
+        padding: 0 4px !important;
+        border-radius: 2px !important;
+      }
+
+      /* Input container styling */
+      .firebaseui-element-container {
+        margin-bottom: 20px !important;
+      }
+
+      /* Input wrapper for better spacing */
+      .firebaseui-textfield-wrapper {
+        position: relative !important;
+      }
+
+      /* Labels */
+      .firebaseui-label {
+        color: #374151 !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        margin-bottom: 8px !important;
+        display: block !important;
+        letter-spacing: 0.025em !important;
+      }
+
+      /* Enhanced label styling for required fields */
+      .firebaseui-label[for*="email"]::after,
+      .firebaseui-label[for*="password"]::after,
+      .firebaseui-label[for*="phone"]::after {
+        content: " *" !important;
+        color: #dc2626 !important;
+        font-weight: 600 !important;
+      }
+
+      /* Error Messages */
+      .firebaseui-error {
+        color: #dc2626 !important;
+        font-size: 13px !important;
+        margin-top: 6px !important;
+        font-weight: 500 !important;
+      }
+
+      /* Progress Bar */
+      .firebaseui-busy-indicator {
+        border-color: #2d5aa0 transparent #2d5aa0 transparent !important;
+      }
+
+      /* Phone Auth Styling */
+      .firebaseui-country-selector {
+        border: 2px solid #e5e7eb !important;
+        border-radius: 12px !important;
+        background: #fafbff !important;
+        padding: 16px 12px !important;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif !important;
+        font-weight: 500 !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04) !important;
+      }
+
+      .firebaseui-country-selector:hover {
+        border-color: #9ca3af !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08) !important;
+      }
+
+      .firebaseui-country-selector:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12) !important;
+        outline: none !important;
+      }
+
+      .firebaseui-flag {
+        border-radius: 6px !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+      }
+
+      /* Phone number input field */
+      .firebaseui-id-phone-number {
+        border: 2px solid #e5e7eb !important;
+        border-radius: 12px !important;
+        padding: 16px 20px !important;
+        font-size: 16px !important;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif !important;
+        background: #fafbff !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        font-weight: 500 !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04) !important;
+      }
+
+      .firebaseui-id-phone-number:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12),
+          0 4px 12px rgba(37, 99, 235, 0.15) !important;
+        outline: none !important;
+        background: #ffffff !important;
+        transform: translateY(-1px) !important;
+      }
+
+      /* Card Container */
+      .firebaseui-card-content {
+        padding: 0 !important;
+      }
+
+      .firebaseui-card {
+        background: transparent !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+      }
+
+      /* Link Styling */
+      .firebaseui-link {
+        color: #2d5aa0 !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+      }
+
+      .firebaseui-link:hover {
+        color: #1a365d !important;
+        text-decoration: underline !important;
+      }
+
+      /* Terms of Service */
+      .firebaseui-tos {
+        font-size: 12px !important;
+        color: #6b7280 !important;
+        text-align: center !important;
+        margin-top: 16px !important;
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 480px) {
+        .firebaseui-idp-button,
+        .firebaseui-form-actions .firebaseui-button {
+          padding: 12px 16px !important;
+          font-size: 14px !important;
         }
-        
-        .links-section {
-            margin-top: 25px;
-            text-align: center;
-            border-top: 1px solid #e2e8f0;
-            padding-top: 20px;
+
+        .firebaseui-input,
+        .firebaseui-textfield {
+          padding: 12px 14px !important;
+          font-size: 16px !important; /* Prevent zoom on iOS */
         }
-        
-        .links-section a {
-            color: #2d5aa0;
-            text-decoration: none;
-            font-size: 14px;
-            margin: 0 15px;
-        }
-        
-        .links-section a:hover {
-            text-decoration: underline;
-        }
-        
-        /* Footer */
-        .gov-footer {
-            background: #1a365d;
-            color: white;
-            text-align: center;
-            padding: 20px;
-            font-size: 12px;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .header-main {
-                flex-direction: column;
-                text-align: center;
-                gap: 15px;
-            }
-            
-            .login-container {
-                grid-template-columns: 1fr;
-                max-width: 500px;
-            }
-            
-            .login-info {
-                order: 2;
-                padding: 30px;
-            }
-            
-            .login-form-section {
-                padding: 30px;
-            }
-            
-            .phone-group {
-                flex-direction: column;
-            }
-            
-            .otp-group {
-                flex-direction: column;
-            }
-        }
-        
-        /* Security indicators */
-        .security-indicator {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 15px;
-            font-size: 12px;
-            color: #666;
-        }
-        
-        .security-indicator:before {
-            content: "🔒";
-            margin-right: 5px;
-        }
-        
-        #recaptcha-container {
-            margin-top: 15px;
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Government Header -->
     <header class="gov-header">
-        <div class="header-top">
-            🇮🇳 Government of India | भारत सरकार
+      <div class="header-top">🇮🇳 Government of India | भारत सरकार</div>
+      <div class="header-main">
+        <div class="logo-section">
+          <div class="emblem">🏛️</div>
+          <div class="title-section">
+            <h1>SecureShare Portal</h1>
+            <p class="subtitle">National Document Management System</p>
+          </div>
         </div>
-        <div class="header-main">
-            <div class="logo-section">
-                <div class="emblem">🏛️</div>
-                <div class="title-section">
-                    <h1>SecureShare Portal</h1>
-                    <p class="subtitle">National Document Management System</p>
-                </div>
-            </div>
-            <select class="lang-selector">
-                <option>English</option>
-                <option>हिन्दी</option>
-            </select>
-        </div>
+        <select class="lang-selector">
+          <option>English</option>
+          <option>हिन्दी</option>
+        </select>
+      </div>
     </header>
-    
+
     <!-- Main Content -->
     <main class="main-content">
-        <div class="login-container">
-            <!-- Left Side - Information -->
-            <div class="login-info">
-                <h2>Secure Document Access</h2>
-                <p>Welcome to the official government document management portal. Access your important documents securely.</p>
-                
-                <ul class="feature-list">
-                    <li>Bank-level security encryption</li>
-                    <li>Digital India compliant platform</li>
-                    <li>Multi-factor authentication</li>
-                    <li>Audit trail for all activities</li>
-                    <li>Family document sharing</li>
-                    <li>Mobile-friendly access</li>
-                </ul>
-                
-                <div class="security-badge">
-                    <strong>🛡️ SSL Secured</strong><br>
-                    Your data is protected with 256-bit encryption
-                </div>
-            </div>
-            
-            <!-- Right Side - Login Form -->
-            <div class="login-form-section">
-                <div class="form-header">
-                    <h3>Citizen Login</h3>
-                    <p>Enter your credentials to access your documents</p>
-                </div>
-                
-                <!-- Email Login Form -->
-                <form onsubmit="event.preventDefault(); login(email.value, password.value);">
-                    <div class="form-group">
-                        <label for="email">Email Address / ईमेल पता</label>
-                        <div class="input-container">
-                            <input type="email" id="email" name="email" class="form-control" placeholder="Enter your registered email" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="password">Password / पासवर्ड</label>
-                        <div class="input-container">
-                            <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">🔐 Secure Login</button>
-                </form>
-                
-                <!-- Divider -->
-                <div class="divider">
-                    <span>या</span>
-                </div>
-                
-                <!-- Phone OTP Section -->
-                <div class="otp-section">
-                    <h4>📱 Mobile OTP Login</h4>
-                    <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Login using OTP sent to your registered mobile number</p>
-                    
-                    <div class="form-group">
-                        <label>Mobile Number / मोबाइल नंबर</label>
-                        <div class="phone-group">
-                            <span class="country-code">+91</span>
-                            <input type="tel" id="phone" class="form-control phone-input" placeholder="Enter 10-digit mobile number" maxlength="10">
-                        </div>
-                    </div>
-                    
-                    <button onclick="sendOTP('+91' + phone.value)" class="btn btn-secondary">📨 Send OTP</button>
-                    
-                    <div class="form-group" style="margin-top: 15px;">
-                        <label for="otp">Enter OTP / OTP दर्ज करें</label>
-                        <div class="otp-group">
-                            <input type="text" id="otp" class="form-control otp-input" placeholder="Enter 6-digit OTP" maxlength="6">
-                            <button onclick="verifyOTP(otp.value)" class="btn btn-primary" style="min-width: 100px;">✓ Verify</button>
-                        </div>
-                    </div>
-                    
-                    <div id="recaptcha-container"></div>
-                </div>
-                
-                <div class="security-indicator">
-                    This is a secure government portal
-                </div>
-                
-                <!-- Links -->
-                <div class="links-section">
-                    <a href="register.html">New User Registration</a>
-                    <a href="#forgot">Forgot Password?</a>
-                    <a href="index.html">← Back to Home</a>
-                </div>
-            </div>
+      <div class="login-container">
+        <!-- Left Side - Information -->
+        <div class="login-info">
+          <h2>Secure Document Access</h2>
+          <p>
+            Welcome to the official government document management portal.
+            Access your important documents securely.
+          </p>
+
+          <ul class="feature-list">
+            <li>Bank-level security encryption</li>
+            <li>Digital India compliant platform</li>
+            <li>Multi-factor authentication</li>
+            <li>Audit trail for all activities</li>
+            <li>Family document sharing</li>
+            <li>Mobile-friendly access</li>
+          </ul>
+
+          <div class="security-badge">
+            <strong>🛡️ SSL Secured</strong><br />
+            Your data is protected with 256-bit encryption
+          </div>
         </div>
+
+        <!-- Right Side - Login Form -->
+        <div class="login-form-section">
+          <div class="form-header">
+            <h3>Citizen Login</h3>
+            <p>Enter your credentials to access your documents</p>
+          </div>
+
+          <!-- FirebaseUI Auth Container -->
+          <div id="firebaseui-auth-container"></div>
+
+          <!-- Alternative: Start FirebaseUI Button -->
+          <div
+            id="firebaseui-start-container"
+            style="text-align: center; margin-bottom: 20px"
+          >
+            <button
+              id="start-firebaseui"
+              class="btn btn-primary"
+              onclick="startFirebaseUI()"
+            >
+              🔐 Start Secure Login
+            </button>
+          </div>
+
+          <div class="security-indicator">
+            This is a secure government portal
+          </div>
+
+          <!-- Links -->
+          <div class="links-section">
+            <a href="register.html">New User Registration</a>
+            <a href="#forgot">Forgot Password?</a>
+            <a href="index.html">← Back to Home</a>
+          </div>
+        </div>
+      </div>
     </main>
-    
+
     <!-- Footer -->
     <footer class="gov-footer">
-        <p>© 2025 Government of India | Developed under Digital India Initiative</p>
-        <p>Best viewed in Chrome, Firefox, Safari, Edge</p>
+      <p>
+        © 2025 Government of India | Developed under Digital India Initiative
+      </p>
+      <p>Best viewed in Chrome, Firefox, Safari, Edge</p>
     </footer>
-    
-    <script type="module" src="/assets/js/logger.js"></script>
-    <script type="module" src="/assets/js/auth.js"></script>
-    <script type="module" src="/assets/js/otp.js"></script>
-</body>
+
+    <script>
+      // Login method toggle functionality
+      function switchLoginMethod(method) {
+        // Remove active class from all toggle buttons
+        document.querySelectorAll(".toggle-btn").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+
+        // Remove active class from all login methods
+        document.querySelectorAll(".login-method").forEach((method) => {
+          method.classList.remove("active");
+        });
+
+        // Add active class to clicked button
+        document
+          .querySelector(`[data-method="${method}"]`)
+          .classList.add("active");
+
+        // Show the selected login method
+        document.getElementById(`${method}-login`).classList.add("active");
+      }
+    </script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <!-- FirebaseUI JavaScript -->
+    <script src="https://www.gstatic.com/firebasejs/ui/6.1.0/firebase-ui-auth.js"></script>
+
+    <script>
+      // Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyCw1nHIUj06se1Pj5LSJAHj9qlcQB6qINc",
+        authDomain: "share-gov-docs-213b7.firebaseapp.com",
+        projectId: "share-gov-docs-213b7",
+        storageBucket: "share-gov-docs-213b7.firebasestorage.app",
+        messagingSenderId: "1022578410753",
+        appId: "1:1022578410753:web:8f2927bbdc025cdc6e4700",
+        measurementId: "G-3DZY2Q6TH7",
+      };
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+
+      // Initialize FirebaseUI
+      const ui = new firebaseui.auth.AuthUI(auth);
+
+      // FirebaseUI configuration
+      const uiConfig = {
+        callbacks: {
+          signInSuccessWithAuthResult: function (authResult, redirectUrl) {
+            console.log("Login successful:", authResult.user);
+
+            // Show success message
+            const container = document.getElementById(
+              "firebaseui-auth-container"
+            );
+            container.innerHTML = `
+                        <div style="text-align: center; padding: 30px; background: #d4edda; border-radius: 6px; border: 1px solid #c3e6cb;">
+                            <h3 style="color: #155724; margin-bottom: 15px;">🎉 Login Successful!</h3>
+                            <p style="color: #333; margin-bottom: 20px;">Welcome back to SecureShare Portal!</p>
+                            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                                <button onclick="window.location.href='dashboard.html'" class="btn btn-primary" style="margin: 0;">📁 Go to Dashboard</button>
+                                <button onclick="window.location.href='profile.html'" class="btn" style="background: #6b7280; color: white; margin: 0;">👤 View Profile</button>
+                            </div>
+                        </div>
+                    `;
+
+            // Redirect after a short delay
+            setTimeout(() => {
+              window.location.href = "dashboard.html";
+            }, 2000);
+
+            return false; // Prevent automatic redirect
+          },
+          uiShown: function () {
+            // Hide loading indicators when UI is shown
+            const loadingIndicator =
+              document.getElementById("loading-indicator");
+            if (loadingIndicator) {
+              loadingIndicator.style.display = "none";
+            }
+          },
+        },
+        signInFlow: "popup",
+        signInSuccessUrl: "dashboard.html",
+        signInOptions: [
+          // Email/password provider
+          firebase.auth.EmailAuthProvider.PROVIDER_ID,
+          // Phone provider
+          {
+            provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+            recaptchaParameters: {
+              type: "image",
+              size: "normal",
+              badge: "bottomleft",
+            },
+            defaultCountry: "IN",
+            defaultNationalNumber: "",
+            loginHint: "+91XXXXXXXXXX",
+          },
+        ],
+        tosUrl: "terms.html",
+        privacyPolicyUrl: "privacy.html",
+      };
+
+      // Function to initialize floating placeholders
+      function initializeFloatingPlaceholders() {
+        // Set up floating placeholders for Firebase UI inputs
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+              if (node.nodeType === Node.ELEMENT_NODE) {
+                // Find all textfield elements
+                const textfields = node.querySelectorAll ? 
+                  node.querySelectorAll('.firebaseui-textfield') : 
+                  (node.classList && node.classList.contains('firebaseui-textfield') ? [node] : []);
+                
+                textfields.forEach((textfield) => {
+                  const input = textfield.querySelector('.firebaseui-input');
+                  if (input && !textfield.dataset.initialized) {
+                    textfield.dataset.initialized = 'true';
+                    
+                    // Get placeholder text from input
+                    const placeholder = input.getAttribute('placeholder') || input.getAttribute('aria-label') || '';
+                    
+                    // Set custom placeholders based on input type or name
+                    let customPlaceholder = placeholder;
+                    if (input.type === 'email' || input.name === 'email') {
+                      customPlaceholder = 'Email Address';
+                    } else if (input.type === 'password' || input.name === 'password') {
+                      customPlaceholder = 'Password';
+                    } else if (input.type === 'tel' || input.name === 'phoneNumber') {
+                      customPlaceholder = 'Phone Number';
+                    } else if (input.name === 'displayName') {
+                      customPlaceholder = 'Full Name';
+                    }
+                    
+                    textfield.setAttribute('data-placeholder', customPlaceholder);
+                    
+                    // Handle focus events
+                    input.addEventListener('focus', () => {
+                      textfield.classList.add('focused');
+                    });
+                    
+                    input.addEventListener('blur', () => {
+                      textfield.classList.remove('focused');
+                      if (input.value.trim()) {
+                        textfield.classList.add('has-content');
+                      } else {
+                        textfield.classList.remove('has-content');
+                      }
+                    });
+                    
+                    // Handle input events
+                    input.addEventListener('input', () => {
+                      if (input.value.trim()) {
+                        textfield.classList.add('has-content');
+                      } else {
+                        textfield.classList.remove('has-content');
+                      }
+                    });
+                    
+                    // Initial check for pre-filled values
+                    if (input.value && input.value.trim()) {
+                      textfield.classList.add('has-content');
+                    }
+                  }
+                });
+              }
+            });
+          });
+        });
+        
+        // Start observing the Firebase UI container
+        const container = document.getElementById('firebaseui-auth-container');
+        if (container) {
+          observer.observe(container, {
+            childList: true,
+            subtree: true
+          });
+        }
+      }
+
+      // Function to start FirebaseUI
+      function startFirebaseUI() {
+        console.log("Starting FirebaseUI...");
+        try {
+          ui.start("#firebaseui-auth-container", uiConfig);
+          console.log("FirebaseUI started successfully");
+          
+          // Initialize floating placeholders after a short delay
+          setTimeout(() => {
+            initializeFloatingPlaceholders();
+          }, 500);
+        } catch (error) {
+          console.error("Error starting FirebaseUI:", error);
+
+          // Show fallback UI
+          const container = document.getElementById(
+            "firebaseui-auth-container"
+          );
+          container.innerHTML = `
+                    <div style="text-align: center; padding: 20px; border: 2px dashed #ccc; border-radius: 8px;">
+                        <h3 style="color: #666; margin-bottom: 15px;">🔧 Authentication Unavailable</h3>
+                        <p style="color: #666; margin-bottom: 20px;">There was an issue loading the authentication system.</p>
+                        <button onclick="window.location.reload()" class="btn btn-primary">🔄 Reload Page</button>
+                    </div>
+                `;
+        }
+      }
+
+      // Make function globally available
+      window.startFirebaseUI = startFirebaseUI;
+
+      // Auto-start when page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        // Add loading indicator
+        const container = document.getElementById("firebaseui-auth-container");
+        container.innerHTML = `
+                <div id="loading-indicator" style="text-align: center; padding: 20px;">
+                    <div style="display: inline-block; width: 20px; height: 20px; border: 3px solid #2d5aa0; border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite;"></div>
+                    <p style="margin-top: 10px; color: #666;">Loading login options...</p>
+                </div>
+            `;
+
+        // Hide start button and show FirebaseUI automatically
+        const startContainer = document.getElementById(
+          "firebaseui-start-container"
+        );
+        if (startContainer) {
+          startContainer.style.display = "none";
+        }
+
+        // Start FirebaseUI after a short delay
+        setTimeout(() => {
+          startFirebaseUI();
+        }, 1000);
+      });
+
+      // Add loading animation styles
+      const style = document.createElement("style");
+      style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+      document.head.appendChild(style);
+    </script>
+  </body>
 </html>
