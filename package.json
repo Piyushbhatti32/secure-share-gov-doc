@@ -1,0 +1,43 @@
+{
+  "name": "secure-share-gov-doc",
+  "version": "1.0.0",
+  "description": "A secure platform for storing and sharing government documents with family members",
+  "main": "public/index.html",
+  "scripts": {
+    "start": "firebase serve",
+    "build": "node build.js validate",
+    "validate": "node build.js validate",
+    "deploy": "firebase deploy",
+    "deploy:hosting": "firebase deploy --only hosting",
+    "deploy:rules": "firebase deploy --only firestore:rules,storage:rules",
+    "emulator": "firebase emulators:start",
+    "lint": "echo 'No linting configured yet'",
+    "test": "echo 'No tests configured yet'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/secure-share-gov-doc.git"
+  },
+  "keywords": [
+    "firebase",
+    "document-management",
+    "government-documents",
+    "digital-india",
+    "document-sharing",
+    "aadhaar",
+    "pan-card",
+    "secure-storage"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yourusername/secure-share-gov-doc/issues"
+  },
+  "homepage": "https://github.com/yourusername/secure-share-gov-doc#readme",
+  "devDependencies": {
+    "firebase-tools": "^14.11.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
