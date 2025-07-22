@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - SecureShare</title>
+    <title>Login - Government Document Portal</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏛️</text></svg>">
     <style>
+        /* Government Portal Professional Styling */
         * {
             margin: 0;
             padding: 0;
@@ -13,107 +14,229 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Times New Roman', Times, serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             min-height: 100vh;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+        }
+        
+        /* Government Header */
+        .gov-header {
+            background: #fff;
+            border-bottom: 4px solid #ff6b35;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-top {
+            background: #1a365d;
+            color: white;
+            padding: 8px 0;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .header-main {
+            display: flex;
             align-items: center;
-            padding: 1rem;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px 40px;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .emblem {
+            width: 60px;
+            height: 60px;
+            background: #ff6b35;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: white;
+        }
+        
+        .title-section h1 {
+            color: #1a365d;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        
+        .title-section .subtitle {
+            color: #666;
+            font-size: 14px;
+            font-style: italic;
+        }
+        
+        .lang-selector {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
         }
         
         .login-container {
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
             overflow: hidden;
-            max-width: 450px;
             width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 500px;
         }
         
-        .login-header {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        .login-info {
+            background: linear-gradient(135deg, #1a365d 0%, #2d5aa0 100%);
             color: white;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .login-info h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        
+        .feature-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+        
+        .feature-list li {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .feature-list li:before {
+            content: "✓";
+            color: #4ade80;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+        .security-badge {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
             text-align: center;
-            padding: 2rem 1rem;
+            font-size: 12px;
         }
         
-        .login-header h1 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
+        .login-form-section {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         
-        .login-header p {
-            opacity: 0.9;
-            font-size: 0.9rem;
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
         }
         
-        .login-form {
-            padding: 2rem;
+        .form-header h3 {
+            color: #1a365d;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .form-header p {
+            color: #666;
+            font-size: 14px;
         }
         
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 20px;
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 8px;
             color: #333;
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .input-container {
+            position: relative;
         }
         
         .form-control {
             width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: #fff;
         }
         
         .form-control:focus {
             outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            border-color: #2d5aa0;
+            box-shadow: 0 0 0 3px rgba(45, 90, 160, 0.1);
         }
         
         .btn {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border: none;
-            border-radius: 8px;
-            font-size: 1rem;
+            border-radius: 6px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-bottom: 1rem;
+            font-family: inherit;
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            background: linear-gradient(135deg, #2d5aa0 0%, #1a365d 100%);
             color: white;
+            margin-bottom: 15px;
         }
         
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
-        }
-        
-        .btn-secondary {
-            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(149, 165, 166, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(45, 90, 160, 0.3);
         }
         
         .divider {
             text-align: center;
-            margin: 2rem 0;
+            margin: 25px 0;
             position: relative;
+            color: #666;
+            font-size: 14px;
         }
         
         .divider::before {
@@ -123,183 +246,267 @@
             left: 0;
             right: 0;
             height: 1px;
-            background: #e0e0e0;
+            background: #e2e8f0;
         }
         
         .divider span {
             background: white;
-            padding: 0 1rem;
-            color: #666;
-            font-size: 0.9rem;
+            padding: 0 15px;
         }
         
         .otp-section {
             background: #f8f9fa;
-            padding: 1.5rem;
-            border-radius: 10px;
-            margin-top: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 15px;
         }
         
-        .otp-section h3 {
-            color: #333;
-            margin-bottom: 1rem;
-            text-align: center;
-            font-size: 1.1rem;
+        .otp-section h4 {
+            color: #1a365d;
+            margin-bottom: 15px;
+            font-size: 16px;
         }
         
-        .phone-input-group {
+        .phone-group {
             display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
+            gap: 8px;
+            margin-bottom: 15px;
         }
         
         .country-code {
-            background: #e9ecef;
-            border: 2px solid #e0e0e0;
-            padding: 12px;
-            border-radius: 8px;
+            background: #e2e8f0;
+            border: 2px solid #e2e8f0;
+            padding: 14px 12px;
+            border-radius: 6px;
             font-weight: 600;
             color: #333;
+            font-size: 16px;
         }
         
-        .phone-number {
+        .phone-input {
             flex: 1;
         }
         
-        .otp-input-group {
+        .otp-group {
             display: flex;
-            gap: 0.5rem;
+            gap: 8px;
+            margin-top: 15px;
         }
         
         .otp-input {
             flex: 1;
         }
         
-        .verify-btn {
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
             min-width: 100px;
         }
         
-        .back-to-home {
+        .btn-secondary:hover {
+            background: #4b5563;
+            transform: translateY(-1px);
+        }
+        
+        .links-section {
+            margin-top: 25px;
             text-align: center;
-            margin-top: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
         }
         
-        .back-to-home a {
-            color: #3498db;
+        .links-section a {
+            color: #2d5aa0;
             text-decoration: none;
-            font-weight: 500;
+            font-size: 14px;
+            margin: 0 15px;
         }
         
-        .back-to-home a:hover {
+        .links-section a:hover {
             text-decoration: underline;
         }
         
-        .register-link {
+        /* Footer */
+        .gov-footer {
+            background: #1a365d;
+            color: white;
             text-align: center;
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid #e0e0e0;
+            padding: 20px;
+            font-size: 12px;
         }
         
-        .register-link p {
-            color: #666;
-            margin-bottom: 0.5rem;
-        }
-        
-        .register-link a {
-            color: #3498db;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        
-        .register-link a:hover {
-            text-decoration: underline;
-        }
-        
-        @media (max-width: 480px) {
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-main {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
             .login-container {
-                margin: 1rem;
+                grid-template-columns: 1fr;
+                max-width: 500px;
             }
             
-            .phone-input-group {
+            .login-info {
+                order: 2;
+                padding: 30px;
+            }
+            
+            .login-form-section {
+                padding: 30px;
+            }
+            
+            .phone-group {
                 flex-direction: column;
             }
             
-            .otp-input-group {
+            .otp-group {
                 flex-direction: column;
             }
+        }
+        
+        /* Security indicators */
+        .security-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .security-indicator:before {
+            content: "🔒";
+            margin-right: 5px;
         }
         
         #recaptcha-container {
-            margin-top: 1rem;
+            margin-top: 15px;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">
-            <h1>🏛️ Welcome Back</h1>
-            <p>Sign in to access your secure documents</p>
+    <!-- Government Header -->
+    <header class="gov-header">
+        <div class="header-top">
+            🇮🇳 Government of India | भारत सरकार
         </div>
-        
-        <div class="login-form">
-            <!-- Email Login Form -->
-            <form onsubmit="event.preventDefault(); login(email.value, password.value);">
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email" required>
+        <div class="header-main">
+            <div class="logo-section">
+                <div class="emblem">🏛️</div>
+                <div class="title-section">
+                    <h1>SecureShare Portal</h1>
+                    <p class="subtitle">National Document Management System</p>
                 </div>
+            </div>
+            <select class="lang-selector">
+                <option>English</option>
+                <option>हिन्दी</option>
+            </select>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="login-container">
+            <!-- Left Side - Information -->
+            <div class="login-info">
+                <h2>Secure Document Access</h2>
+                <p>Welcome to the official government document management portal. Access your important documents securely.</p>
                 
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
+                <ul class="feature-list">
+                    <li>Bank-level security encryption</li>
+                    <li>Digital India compliant platform</li>
+                    <li>Multi-factor authentication</li>
+                    <li>Audit trail for all activities</li>
+                    <li>Family document sharing</li>
+                    <li>Mobile-friendly access</li>
+                </ul>
+                
+                <div class="security-badge">
+                    <strong>🛡️ SSL Secured</strong><br>
+                    Your data is protected with 256-bit encryption
                 </div>
-                
-                <button type="submit" class="btn btn-primary">🔐 Login with Email</button>
-            </form>
-            
-            <!-- Divider -->
-            <div class="divider">
-                <span>OR</span>
             </div>
             
-            <!-- Phone OTP Login -->
-            <div class="otp-section">
-                <h3>📱 Login with Phone OTP</h3>
+            <!-- Right Side - Login Form -->
+            <div class="login-form-section">
+                <div class="form-header">
+                    <h3>Citizen Login</h3>
+                    <p>Enter your credentials to access your documents</p>
+                </div>
                 
-                <div class="form-group">
-                    <label>Phone Number</label>
-                    <div class="phone-input-group">
-                        <span class="country-code">+91</span>
-                        <input type="tel" id="phone" class="form-control phone-number" placeholder="Enter phone number" maxlength="10">
+                <!-- Email Login Form -->
+                <form onsubmit="event.preventDefault(); login(email.value, password.value);">
+                    <div class="form-group">
+                        <label for="email">Email Address / ईमेल पता</label>
+                        <div class="input-container">
+                            <input type="email" id="email" name="email" class="form-control" placeholder="Enter your registered email" required>
+                        </div>
                     </div>
-                </div>
-                
-                <button onclick="sendOTP('+91' + phone.value)" class="btn btn-secondary">📨 Send OTP</button>
-                
-                <div class="form-group">
-                    <label for="otp">Enter OTP</label>
-                    <div class="otp-input-group">
-                        <input type="text" id="otp" class="form-control otp-input" placeholder="6-digit OTP" maxlength="6">
-                        <button onclick="verifyOTP(otp.value)" class="btn btn-primary verify-btn">✓ Verify</button>
+                    
+                    <div class="form-group">
+                        <label for="password">Password / पासवर्ड</label>
+                        <div class="input-container">
+                            <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
+                        </div>
                     </div>
+                    
+                    <button type="submit" class="btn btn-primary">🔐 Secure Login</button>
+                </form>
+                
+                <!-- Divider -->
+                <div class="divider">
+                    <span>या</span>
                 </div>
                 
-                <div id="recaptcha-container"></div>
-            </div>
-            
-            <!-- Register Link -->
-            <div class="register-link">
-                <p>Don't have an account?</p>
-                <a href="register.html">Create New Account</a>
-            </div>
-            
-            <!-- Back to Home -->
-            <div class="back-to-home">
-                <a href="index.html">← Back to Home</a>
+                <!-- Phone OTP Section -->
+                <div class="otp-section">
+                    <h4>📱 Mobile OTP Login</h4>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Login using OTP sent to your registered mobile number</p>
+                    
+                    <div class="form-group">
+                        <label>Mobile Number / मोबाइल नंबर</label>
+                        <div class="phone-group">
+                            <span class="country-code">+91</span>
+                            <input type="tel" id="phone" class="form-control phone-input" placeholder="Enter 10-digit mobile number" maxlength="10">
+                        </div>
+                    </div>
+                    
+                    <button onclick="sendOTP('+91' + phone.value)" class="btn btn-secondary">📨 Send OTP</button>
+                    
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label for="otp">Enter OTP / OTP दर्ज करें</label>
+                        <div class="otp-group">
+                            <input type="text" id="otp" class="form-control otp-input" placeholder="Enter 6-digit OTP" maxlength="6">
+                            <button onclick="verifyOTP(otp.value)" class="btn btn-primary" style="min-width: 100px;">✓ Verify</button>
+                        </div>
+                    </div>
+                    
+                    <div id="recaptcha-container"></div>
+                </div>
+                
+                <div class="security-indicator">
+                    This is a secure government portal
+                </div>
+                
+                <!-- Links -->
+                <div class="links-section">
+                    <a href="register.html">New User Registration</a>
+                    <a href="#forgot">Forgot Password?</a>
+                    <a href="index.html">← Back to Home</a>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="gov-footer">
+        <p>© 2025 Government of India | Developed under Digital India Initiative</p>
+        <p>Best viewed in Chrome, Firefox, Safari, Edge</p>
+    </footer>
     
     <script type="module" src="/assets/js/logger.js"></script>
     <script type="module" src="/assets/js/auth.js"></script>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - SecureShare</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏛️</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+        
+        .login-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+            max-width: 450px;
+            width: 100%;
+        }
+        
+        .login-header {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+        
+        .login-header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+        
+        .login-form {
+            padding: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(149, 165, 166, 0.4);
+        }
+        
+        .divider {
+            text-align: center;
+            margin: 2rem 0;
+            position: relative;
+        }
+        
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e0e0e0;
+        }
+        
+        .divider span {
+            background: white;
+            padding: 0 1rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .otp-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+        }
+        
+        .otp-section h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        
+        .phone-input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .country-code {
+            background: #e9ecef;
+            border: 2px solid #e0e0e0;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .phone-number {
+            flex: 1;
+        }
+        
+        .otp-input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .otp-input {
+            flex: 1;
+        }
+        
+        .verify-btn {
+            min-width: 100px;
+        }
+        
+        .back-to-home {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        
+        .back-to-home a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .back-to-home a:hover {
+            text-decoration: underline;
+        }
+        
+        .register-link {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .register-link p {
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        
+        .register-link a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 480px) {
+            .login-container {
+                margin: 1rem;
+            }
+            
+            .phone-input-group {
+                flex-direction: column;
+            }
+            
+            .otp-input-group {
+                flex-direction: column;
+            }
+        }
+        
+        #recaptcha-container {
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>🏛️ Welcome Back</h1>
+            <p>Sign in to access your secure documents</p>
+        </div>
+        
+        <div class="login-form">
+            <!-- Email Login Form -->
+            <form onsubmit="event.preventDefault(); login(email.value, password.value);">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">🔐 Login with Email</button>
+            </form>
+            
+            <!-- Divider -->
+            <div class="divider">
+                <span>OR</span>
+            </div>
+            
+            <!-- Phone OTP Login -->
+            <div class="otp-section">
+                <h3>📱 Login with Phone OTP</h3>
+                
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <div class="phone-input-group">
+                        <span class="country-code">+91</span>
+                        <input type="tel" id="phone" class="form-control phone-number" placeholder="Enter phone number" maxlength="10">
+                    </div>
+                </div>
+                
+                <button onclick="sendOTP('+91' + phone.value)" class="btn btn-secondary">📨 Send OTP</button>
+                
+                <div class="form-group">
+                    <label for="otp">Enter OTP</label>
+                    <div class="otp-input-group">
+                        <input type="text" id="otp" class="form-control otp-input" placeholder="6-digit OTP" maxlength="6">
+                        <button onclick="verifyOTP(otp.value)" class="btn btn-primary verify-btn">✓ Verify</button>
+                    </div>
+                </div>
+                
+                <div id="recaptcha-container"></div>
+            </div>
+            
+            <!-- Register Link -->
+            <div class="register-link">
+                <p>Don't have an account?</p>
+                <a href="register.html">Create New Account</a>
+            </div>
+            
+            <!-- Back to Home -->
+            <div class="back-to-home">
+                <a href="index.html">← Back to Home</a>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module" src="/assets/js/logger.js"></script>
+    <script type="module" src="/assets/js/auth.js"></script>
+    <script type="module" src="/assets/js/otp.js"></script>
+</body>
+</html>

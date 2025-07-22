@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - SecureShare</title>
+    <title>Register - Government Document Portal</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏛️</text></svg>">
     <style>
+        /* Government Portal Professional Styling */
         * {
             margin: 0;
             padding: 0;
@@ -13,141 +14,287 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Times New Roman', Times, serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             min-height: 100vh;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+        }
+        
+        /* Government Header */
+        .gov-header {
+            background: #fff;
+            border-bottom: 4px solid #ff6b35;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-top {
+            background: #1a365d;
+            color: white;
+            padding: 8px 0;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .header-main {
+            display: flex;
             align-items: center;
-            padding: 1rem;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px 40px;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .emblem {
+            width: 60px;
+            height: 60px;
+            background: #ff6b35;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: white;
+        }
+        
+        .title-section h1 {
+            color: #1a365d;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        
+        .title-section .subtitle {
+            color: #666;
+            font-size: 14px;
+            font-style: italic;
+        }
+        
+        .lang-selector {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
         }
         
         .register-container {
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
             overflow: hidden;
-            max-width: 500px;
             width: 100%;
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 600px;
         }
         
-        .register-header {
-            background: linear-gradient(135deg, #27ae60 0%, #219a52 100%);
+        .register-info {
+            background: linear-gradient(135deg, #16a085 0%, #27ae60 100%);
             color: white;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .register-info h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        
+        .feature-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+        
+        .feature-list li {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .feature-list li:before {
+            content: "✓";
+            color: #4ade80;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+        .eligibility-badge {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 12px;
+        }
+        
+        .eligibility-badge h4 {
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        
+        .register-form-section {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow-y: auto;
+            max-height: 600px;
+        }
+        
+        .form-header {
             text-align: center;
-            padding: 2rem 1rem;
+            margin-bottom: 30px;
         }
         
-        .register-header h1 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
+        .form-header h3 {
+            color: #1a365d;
+            font-size: 24px;
+            margin-bottom: 8px;
         }
         
-        .register-header p {
-            opacity: 0.9;
-            font-size: 0.9rem;
-        }
-        
-        .register-form {
-            padding: 2rem;
+        .form-header p {
+            color: #666;
+            font-size: 14px;
         }
         
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 20px;
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 8px;
             color: #333;
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .input-container {
+            position: relative;
         }
         
         .form-control {
             width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: #fff;
         }
         
         .form-control:focus {
             outline: none;
-            border-color: #27ae60;
-            box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+            border-color: #16a085;
+            box-shadow: 0 0 0 3px rgba(22, 160, 133, 0.1);
         }
         
-        .password-requirements {
+        .password-strength {
+            margin-top: 8px;
+            font-size: 12px;
+        }
+        
+        .strength-indicator {
+            display: flex;
+            gap: 4px;
+            margin-top: 5px;
+        }
+        
+        .strength-bar {
+            height: 4px;
+            flex: 1;
+            background: #e2e8f0;
+            border-radius: 2px;
+            transition: background-color 0.3s;
+        }
+        
+        .strength-bar.active {
+            background: #16a085;
+        }
+        
+        .requirements {
             background: #f8f9fa;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-top: 0.5rem;
-            font-size: 0.9rem;
-        }
-        
-        .password-requirements h4 {
-            color: #333;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 12px;
         }
         
         .requirement {
             display: flex;
             align-items: center;
-            margin-bottom: 0.25rem;
+            margin-bottom: 4px;
             color: #666;
         }
         
         .requirement.met {
-            color: #27ae60;
+            color: #16a085;
         }
         
-        .requirement::before {
-            content: '•';
-            margin-right: 0.5rem;
+        .requirement:before {
+            content: "•";
+            margin-right: 8px;
         }
         
-        .requirement.met::before {
-            content: '✓';
+        .requirement.met:before {
+            content: "✓";
+            font-weight: bold;
         }
         
         .btn {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border: none;
-            border-radius: 8px;
-            font-size: 1rem;
+            border-radius: 6px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-bottom: 1rem;
+            font-family: inherit;
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #27ae60 0%, #219a52 100%);
+            background: linear-gradient(135deg, #16a085 0%, #27ae60 100%);
             color: white;
+            margin-bottom: 15px;
         }
         
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
-        }
-        
-        .btn-secondary {
-            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(149, 165, 166, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(22, 160, 133, 0.3);
         }
         
         .divider {
             text-align: center;
-            margin: 2rem 0;
+            margin: 25px 0;
             position: relative;
+            color: #666;
+            font-size: 14px;
         }
         
         .divider::before {
@@ -157,237 +304,347 @@
             left: 0;
             right: 0;
             height: 1px;
-            background: #e0e0e0;
+            background: #e2e8f0;
         }
         
         .divider span {
             background: white;
-            padding: 0 1rem;
-            color: #666;
-            font-size: 0.9rem;
+            padding: 0 15px;
         }
         
         .otp-section {
             background: #f8f9fa;
-            padding: 1.5rem;
-            border-radius: 10px;
-            margin-top: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 15px;
         }
         
-        .otp-section h3 {
-            color: #333;
-            margin-bottom: 1rem;
-            text-align: center;
-            font-size: 1.1rem;
+        .otp-section h4 {
+            color: #1a365d;
+            margin-bottom: 15px;
+            font-size: 16px;
         }
         
-        .phone-input-group {
+        .phone-group {
             display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
+            gap: 8px;
+            margin-bottom: 15px;
         }
         
         .country-code {
-            background: #e9ecef;
-            border: 2px solid #e0e0e0;
-            padding: 12px;
-            border-radius: 8px;
+            background: #e2e8f0;
+            border: 2px solid #e2e8f0;
+            padding: 14px 12px;
+            border-radius: 6px;
             font-weight: 600;
             color: #333;
+            font-size: 16px;
         }
         
-        .phone-number {
+        .phone-input {
             flex: 1;
         }
         
-        .otp-input-group {
+        .otp-group {
             display: flex;
-            gap: 0.5rem;
+            gap: 8px;
+            margin-top: 15px;
         }
         
         .otp-input {
             flex: 1;
         }
         
-        .verify-btn {
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
             min-width: 100px;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+            transform: translateY(-1px);
         }
         
         .terms-section {
             background: #e8f5e8;
-            padding: 1rem;
-            border-radius: 8px;
-            margin: 1.5rem 0;
-            border-left: 4px solid #27ae60;
+            border: 1px solid #c6f6d5;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 12px;
         }
         
         .terms-section h4 {
-            color: #27ae60;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
+            color: #16a085;
+            margin-bottom: 8px;
+            font-size: 14px;
         }
         
         .terms-list {
-            font-size: 0.9rem;
-            color: #333;
-            line-height: 1.4;
+            list-style: none;
         }
         
         .terms-list li {
-            margin-bottom: 0.25rem;
+            margin-bottom: 4px;
+            color: #333;
+            display: flex;
+            align-items: flex-start;
         }
         
-        .back-to-home {
+        .terms-list li:before {
+            content: "•";
+            margin-right: 8px;
+            color: #16a085;
+            font-weight: bold;
+        }
+        
+        .links-section {
+            margin-top: 25px;
             text-align: center;
-            margin-top: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
         }
         
-        .back-to-home a {
-            color: #27ae60;
+        .links-section a {
+            color: #16a085;
             text-decoration: none;
-            font-weight: 500;
+            font-size: 14px;
+            margin: 0 15px;
         }
         
-        .back-to-home a:hover {
+        .links-section a:hover {
             text-decoration: underline;
         }
         
-        .login-link {
+        /* Footer */
+        .gov-footer {
+            background: #1a365d;
+            color: white;
             text-align: center;
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid #e0e0e0;
+            padding: 20px;
+            font-size: 12px;
         }
         
-        .login-link p {
-            color: #666;
-            margin-bottom: 0.5rem;
-        }
-        
-        .login-link a {
-            color: #27ae60;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        
-        .login-link a:hover {
-            text-decoration: underline;
-        }
-        
-        @media (max-width: 480px) {
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-main {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
             .register-container {
-                margin: 1rem;
+                grid-template-columns: 1fr;
+                max-width: 500px;
             }
             
-            .phone-input-group {
+            .register-info {
+                order: 2;
+                padding: 30px;
+            }
+            
+            .register-form-section {
+                padding: 30px;
+                max-height: none;
+            }
+            
+            .phone-group {
                 flex-direction: column;
             }
             
-            .otp-input-group {
+            .otp-group {
                 flex-direction: column;
             }
+        }
+        
+        /* Security indicators */
+        .security-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .security-indicator:before {
+            content: "🔒";
+            margin-right: 5px;
         }
         
         #recaptcha-container {
-            margin-top: 1rem;
+            margin-top: 15px;
         }
     </style>
 </head>
 <body>
-    <div class="register-container">
-        <div class="register-header">
-            <h1>🏛️ Join SecureShare</h1>
-            <p>Create your account to secure your important documents</p>
+    <!-- Government Header -->
+    <header class="gov-header">
+        <div class="header-top">
+            🇮🇳 Government of India | भारत सरकार
         </div>
-        
-        <div class="register-form">
-            <!-- Email Registration Form -->
-            <form onsubmit="event.preventDefault(); register(email.value, password.value);">
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email address" required>
+        <div class="header-main">
+            <div class="logo-section">
+                <div class="emblem">🏛️</div>
+                <div class="title-section">
+                    <h1>SecureShare Portal</h1>
+                    <p class="subtitle">National Document Management System</p>
                 </div>
+            </div>
+            <select class="lang-selector">
+                <option>English</option>
+                <option>हिन्दी</option>
+            </select>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="register-container">
+            <!-- Left Side - Information -->
+            <div class="register-info">
+                <h2>Join SecureShare</h2>
+                <p>Create your secure account to access government document management services under Digital India initiative.</p>
                 
-                <div class="form-group">
-                    <label for="password">Create Password</label>
-                    <input type="password" id="password" name="password" class="form-control" placeholder="Create a secure password" required minlength="6">
-                    
-                    <div class="password-requirements">
-                        <h4>🔒 Password Requirements:</h4>
-                        <div class="requirement" data-req="length">At least 6 characters</div>
-                        <div class="requirement" data-req="letter">Contains letters</div>
-                        <div class="requirement" data-req="number">Contains numbers (recommended)</div>
-                    </div>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">🎆 Create Account with Email</button>
-            </form>
-            
-            <!-- Terms Section -->
-            <div class="terms-section">
-                <h4>🛡️ Security Promise</h4>
-                <ul class="terms-list">
-                    <li>Your documents are encrypted with bank-level security</li>
-                    <li>Only you can access your uploaded files</li>
-                    <li>We never share your data with third parties</li>
-                    <li>Full audit trail of all document activities</li>
+                <ul class="feature-list">
+                    <li>Free lifetime account</li>
+                    <li>Secure document storage</li>
+                    <li>Family sharing capabilities</li>
+                    <li>Mobile access anywhere</li>
+                    <li>Government-grade security</li>
+                    <li>Multi-language support</li>
                 </ul>
-            </div>
-            
-            <!-- Divider -->
-            <div class="divider">
-                <span>OR</span>
-            </div>
-            
-            <!-- Phone OTP Registration -->
-            <div class="otp-section">
-                <h3>📱 Register with Phone OTP</h3>
                 
-                <div class="form-group">
-                    <label>Phone Number</label>
-                    <div class="phone-input-group">
-                        <span class="country-code">+91</span>
-                        <input type="tel" id="phone" class="form-control phone-number" placeholder="Enter phone number" maxlength="10">
-                    </div>
-                    <small style="color: #666; font-size: 0.8rem;">You'll receive an OTP for verification</small>
+                <div class="eligibility-badge">
+                    <h4>🎯 Eligibility Criteria</h4>
+                    <ul class="terms-list" style="font-size: 11px;">
+                        <li>Indian citizen with valid ID</li>
+                        <li>Age 18+ years</li>
+                        <li>Valid email and mobile number</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Right Side - Register Form -->
+            <div class="register-form-section">
+                <div class="form-header">
+                    <h3>Citizen Registration</h3>
+                    <p>Create your secure government document account</p>
                 </div>
                 
-                <button onclick="sendOTP('+91' + phone.value)" class="btn btn-secondary">📨 Send OTP</button>
-                
-                <div class="form-group">
-                    <label for="otp">Enter OTP</label>
-                    <div class="otp-input-group">
-                        <input type="text" id="otp" class="form-control otp-input" placeholder="6-digit OTP" maxlength="6">
-                        <button onclick="verifyOTP(otp.value)" class="btn btn-primary verify-btn">✓ Verify</button>
+                <!-- Email Registration Form -->
+                <form onsubmit="event.preventDefault(); register(email.value, password.value);">
+                    <div class="form-group">
+                        <label for="email">Email Address / ईमेल पता *</label>
+                        <div class="input-container">
+                            <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email address" required>
+                        </div>
                     </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Create Password / पासवर्ड बनाएं *</label>
+                        <div class="input-container">
+                            <input type="password" id="password" name="password" class="form-control" placeholder="Create a strong password" required minlength="6">
+                        </div>
+                        
+                        <div class="password-strength">
+                            <div class="strength-indicator">
+                                <div class="strength-bar"></div>
+                                <div class="strength-bar"></div>
+                                <div class="strength-bar"></div>
+                                <div class="strength-bar"></div>
+                            </div>
+                            
+                            <div class="requirements">
+                                <div class="requirement" data-req="length">Minimum 6 characters</div>
+                                <div class="requirement" data-req="letter">Contains letters</div>
+                                <div class="requirement" data-req="number">Contains numbers (recommended)</div>
+                                <div class="requirement" data-req="special">Contains special characters (recommended)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">🎆 Create Secure Account</button>
+                </form>
+                
+                <!-- Terms Section -->
+                <div class="terms-section">
+                    <h4>🛡️ Security & Privacy Commitment</h4>
+                    <ul class="terms-list">
+                        <li>End-to-end encryption for all documents</li>
+                        <li>No data sharing with third parties</li>
+                        <li>Complete audit trail maintenance</li>
+                        <li>GDPR and IT Act 2000 compliant</li>
+                    </ul>
                 </div>
                 
-                <div id="recaptcha-container"></div>
-            </div>
-            
-            <!-- Login Link -->
-            <div class="login-link">
-                <p>Already have an account?</p>
-                <a href="login.html">Sign In Here</a>
-            </div>
-            
-            <!-- Back to Home -->
-            <div class="back-to-home">
-                <a href="index.html">← Back to Home</a>
+                <!-- Divider -->
+                <div class="divider">
+                    <span>या</span>
+                </div>
+                
+                <!-- Phone OTP Registration -->
+                <div class="otp-section">
+                    <h4>📱 Quick Registration via Mobile OTP</h4>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Register instantly using your mobile number</p>
+                    
+                    <div class="form-group">
+                        <label>Mobile Number / मोबाइल नंबर *</label>
+                        <div class="phone-group">
+                            <span class="country-code">+91</span>
+                            <input type="tel" id="phone" class="form-control phone-input" placeholder="Enter 10-digit mobile number" maxlength="10">
+                        </div>
+                    </div>
+                    
+                    <button onclick="sendOTP('+91' + phone.value)" class="btn btn-secondary">📨 Send Registration OTP</button>
+                    
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label for="otp">Enter OTP / OTP दर्ज करें</label>
+                        <div class="otp-group">
+                            <input type="text" id="otp" class="form-control otp-input" placeholder="Enter 6-digit OTP" maxlength="6">
+                            <button onclick="verifyOTP(otp.value)" class="btn btn-primary" style="min-width: 100px;">✓ Register</button>
+                        </div>
+                    </div>
+                    
+                    <div id="recaptcha-container"></div>
+                </div>
+                
+                <div class="security-indicator">
+                    Secured by Government of India IT protocols
+                </div>
+                
+                <!-- Links -->
+                <div class="links-section">
+                    <a href="login-new.html">Already Registered? Sign In</a>
+                    <a href="#help">Help & Support</a>
+                    <a href="index.html">← Back to Home</a>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="gov-footer">
+        <p>© 2025 Government of India | Developed under Digital India Initiative</p>
+        <p>Best viewed in Chrome, Firefox, Safari, Edge | Site last updated: Jan 2025</p>
+    </footer>
     
     <script>
         // Password strength checker
         document.getElementById('password').addEventListener('input', function(e) {
             const password = e.target.value;
             const requirements = document.querySelectorAll('.requirement');
+            const strengthBars = document.querySelectorAll('.strength-bar');
+            
+            let strength = 0;
             
             // Check length
             const lengthReq = document.querySelector('[data-req="length"]');
             if (password.length >= 6) {
                 lengthReq.classList.add('met');
+                strength++;
             } else {
                 lengthReq.classList.remove('met');
             }
@@ -396,6 +653,7 @@
             const letterReq = document.querySelector('[data-req="letter"]');
             if (/[a-zA-Z]/.test(password)) {
                 letterReq.classList.add('met');
+                strength++;
             } else {
                 letterReq.classList.remove('met');
             }
@@ -404,9 +662,28 @@
             const numberReq = document.querySelector('[data-req="number"]');
             if (/[0-9]/.test(password)) {
                 numberReq.classList.add('met');
+                strength++;
             } else {
                 numberReq.classList.remove('met');
             }
+            
+            // Check for special characters
+            const specialReq = document.querySelector('[data-req="special"]');
+            if (/[^a-zA-Z0-9]/.test(password)) {
+                specialReq.classList.add('met');
+                strength++;
+            } else {
+                specialReq.classList.remove('met');
+            }
+            
+            // Update strength bars
+            strengthBars.forEach((bar, index) => {
+                if (index < strength) {
+                    bar.classList.add('active');
+                } else {
+                    bar.classList.remove('active');
+                }
+            });
         });
         
         // Phone number formatting
