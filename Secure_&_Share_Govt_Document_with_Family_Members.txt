@@ -1,0 +1,31 @@
+Secure & Share Govt Document with Family Members
+
+Project Title: Secure & Share Govt Document with Family Members
+
+Technologies: HTML, CSS, JS, Firebase
+Project Difficulty Level: Medium
+
+Problem Statement:
+Enable citizens to store and share digital copies of vital documents (e.g., mark sheets, PAN cards, passports) securely. Reduces physical document dependency, improves access, links to Aadhaar, and reduces government overhead costs.
+
+Features:
+- User Registration and OTP Verification
+- Login functionality
+- Upload, Update, Delete documents
+- Share documents securely with family
+- My Profile page
+
+Evaluation Metrics:
+- Modular Code: Safe, Testable, Maintainable, Portable
+- GitHub: Maintain a public repository with code, readme, project flow, and code standards
+- Use Firebase for backend
+- Logging: Mandatory for all actions (JS or Python logging)
+
+Deployment & Optimization:
+- Deployment possible on cloud, edge, or local environment with reasoning
+- Code-level and architecture-level optimization to be documented
+- Mention test cases
+
+Submission Requirements:
+- Upload code to GitHub and share the repository link
+- Submit a detailed project report as per provided format
