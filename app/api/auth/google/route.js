@@ -8,12 +8,6 @@ if (typeof window === 'undefined') {
   initializeFirebaseAdmin();
 }
 
-const oauth2Client = new google.auth.OAuth2(
-  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
-  process.env.GOOGLE_CLIENT_SECRET || '',
-  `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/google/callback`
-);
-
 // Scope for Google Drive API
 const SCOPES = [
   'https://www.googleapis.com/auth/drive.file',
@@ -29,7 +23,17 @@ export async function GET(request) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
+    // Dynamically detect protocol and host
+    const host = request.headers.get('host');
+    const protocol = host.startsWith('localhost') ? 'http' : 'https';
+    const redirectUri = `${protocol}://${host}/api/auth/google/callback`;
+
     // Generate authentication URL
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
+      process.env.GOOGLE_CLIENT_SECRET || '',
+      redirectUri
+    );
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: SCOPES,

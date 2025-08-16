@@ -8,23 +8,29 @@ if (typeof window === 'undefined') {
   initializeFirebaseAdmin();
 }
 
-const oauth2Client = new google.auth.OAuth2(
-  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
-  process.env.GOOGLE_CLIENT_SECRET || '',
-  `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/google/callback`
-);
-
 export async function GET(request) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
     const state = searchParams.get('state'); // This contains the user ID
 
+    // Dynamically detect protocol and host
+    const host = request.headers.get('host');
+    const protocol = host.startsWith('localhost') ? 'http' : 'https';
+    const baseUrl = `${protocol}://${host}`;
+
     if (!code || !state) {
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/documents/upload?error=Missing required parameters`
+        `${baseUrl}/documents/upload?error=Missing required parameters`
       );
     }
+
+    // Dynamically construct the OAuth2 client with the correct redirect URI
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
+      process.env.GOOGLE_CLIENT_SECRET || '',
+      `${baseUrl}/api/auth/google/callback`
+    );
 
     // Get tokens from code
     const { tokens } = await oauth2Client.getToken(code);
@@ -41,12 +47,16 @@ export async function GET(request) {
 
     // Redirect back to the upload page with success
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/documents/upload?connected=true&setup=true`
+      `${baseUrl}/documents/upload?connected=true&setup=true`
     );
   } catch (error) {
     console.error('Error handling Google callback:', error);
+    // Try to redirect to the detected domain with the error message
+    const host = request.headers.get('host');
+    const protocol = host && host.startsWith('localhost') ? 'http' : 'https';
+    const baseUrl = host ? `${protocol}://${host}` : '';
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/documents/upload?error=${encodeURIComponent(error.message)}`
+      `${baseUrl}/documents/upload?error=${encodeURIComponent(error.message)}`
     );
   }
 }

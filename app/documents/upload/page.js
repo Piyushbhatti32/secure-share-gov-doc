@@ -35,7 +35,9 @@ export default function UploadPage() {
   useEffect(() => {
     const checkConnection = async () => {
       try {
+        console.log('Checking Google Drive connection...');
         const connectionStatus = await checkGoogleDriveConnection();
+        console.log('Connection status:', connectionStatus);
         
         if (connectionStatus.connected) {
           setIsGoogleConnected(true);
@@ -43,22 +45,26 @@ export default function UploadPage() {
         } else if (connectionStatus.needsRefresh) {
           // Try to refresh the connection automatically
           try {
+            console.log('Attempting to refresh connection...');
             await refreshGoogleDriveConnection();
             setIsGoogleConnected(true);
             setError(null);
           } catch (refreshError) {
+            console.error('Refresh failed:', refreshError);
             setIsGoogleConnected(false);
             setError('Google Drive connection expired. Please reconnect.');
           }
         } else {
           setIsGoogleConnected(false);
           if (connectionStatus.error) {
+            console.error('Connection error:', connectionStatus.error);
             setError(connectionStatus.error);
           }
         }
       } catch (error) {
         console.error('Error checking Google Drive connection:', error);
         setIsGoogleConnected(false);
+        setError('Failed to check Google Drive connection');
       }
     };
 
@@ -82,6 +88,29 @@ export default function UploadPage() {
       setError(decodeURIComponent(error));
     }
   }, [searchParams]);
+
+  const connectToGoogle = async () => {
+    try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        setError('You must be logged in to connect to Google Drive');
+        return;
+      }
+      
+      // Get the Google OAuth URL from the backend
+      const response = await fetch(`/api/auth/google?userId=${currentUser.uid}`);
+      const data = await response.json();
+      
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setError('Failed to get Google authentication URL');
+      }
+    } catch (error) {
+      console.error('Error connecting to Google:', error);
+      setError('Failed to initiate Google Drive connection');
+    }
+  };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -111,25 +140,7 @@ export default function UploadPage() {
     }
   };
 
-  const connectToGoogle = async () => {
-    try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        throw new Error('You must be logged in to connect to Google Drive');
-      }
 
-      const response = await fetch(`/api/auth/google?userId=${currentUser.uid}`);
-      const data = await response.json();
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('Failed to get Google authentication URL');
-      }
-    } catch (error) {
-      setError(error.message);
-    }
-  };
 
   const handleUpload = async (e) => {
     e.preventDefault();

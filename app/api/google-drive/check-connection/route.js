@@ -32,10 +32,15 @@ export async function GET(request) {
     const token = authHeader.split('Bearer ')[1];
     const decodedToken = await getAuth().verifyIdToken(token);
 
-    // Check if user has Google authentication
-    if (!decodedToken.firebase.identities['google.com']) {
+    // Check if user has Google authentication (either direct Google sign-in or OAuth tokens)
+    const hasGoogleIdentity = decodedToken.firebase.identities['google.com'];
+    const auth = getAuth();
+    const user = await auth.getUser(decodedToken.uid);
+    const hasOAuthTokens = user.customClaims?.google_oauth_access_token || user.customClaims?.google_oauth_refresh_token;
+    
+    if (!hasGoogleIdentity && !hasOAuthTokens) {
       return NextResponse.json(
-        { error: 'Google account not connected. Please sign in with Google.' },
+        { error: 'Google account not connected. Please connect your Google account first.' },
         { status: 401 }
       );
     }

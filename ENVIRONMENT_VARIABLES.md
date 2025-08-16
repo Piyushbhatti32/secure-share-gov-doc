@@ -28,12 +28,6 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret
 NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
 ```
 
-### Cloudinary Configuration
-```bash
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
-NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
-```
-
 ### Email Configuration
 ```bash
 EMAIL_USER=your_email@domain.com
@@ -62,12 +56,6 @@ EMAIL_FROM=your_email@domain.com
 3. Enable Google+ API
 4. Go to Credentials → Create Credentials → OAuth 2.0 Client IDs
 5. Set authorized redirect URIs to include your domain
-
-### Cloudinary
-1. Sign up at [Cloudinary](https://cloudinary.com/)
-2. Go to Dashboard
-3. Copy your cloud name
-4. Create an upload preset in Settings → Upload
 
 ### Email Configuration
 1. Use your email provider's SMTP settings
