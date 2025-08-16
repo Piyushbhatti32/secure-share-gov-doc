@@ -5,7 +5,10 @@ import { initializeFirebaseAdmin } from '@/lib/firebase-admin';
 import { refreshGoogleToken } from '@/lib/services/google-auth-service';
 
 // Initialize Firebase Admin
-initializeFirebaseAdmin();
+// Only initialize Firebase Admin if we're in a server environment
+if (typeof window === 'undefined') {
+  initializeFirebaseAdmin();
+}
 
 // Initialize Google Drive client
 const initializeDriveClient = async (accessToken) => {

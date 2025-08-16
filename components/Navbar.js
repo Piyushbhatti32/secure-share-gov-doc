@@ -8,6 +8,7 @@ import Image from 'next/image';
 import GoogleDriveStatus from './GoogleDriveStatus';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome, faFolder, faBell, faUser, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
+import { handleLogout as handleLogoutActivity } from '@/lib/services/auth-service';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -25,7 +26,11 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
+      const currentUser = auth.currentUser;
       await auth.signOut();
+      if (currentUser) {
+        await handleLogoutActivity(currentUser);
+      }
       router.push("/login");
     } catch (error) {
       console.error("Error logging out:", error);

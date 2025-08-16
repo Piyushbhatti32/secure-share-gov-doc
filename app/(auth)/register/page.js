@@ -13,6 +13,7 @@ import {
 import { handleError } from "@/lib/utils/error-handler";
 import Link from "next/link";
 import Image from "next/image";
+import { handleLogin } from "@/lib/services/auth-service";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -43,11 +44,14 @@ export default function RegisterPage() {
       }
 
       // Create user
-      await createUser(formData.email, formData.password, {
+      const user = await createUser(formData.email, formData.password, {
         displayName: formData.displayName,
         phone: formData.phone,
         aadharNumber: formData.aadharNumber,
       });
+
+      // Log the registration activity
+      await handleLogin(user);
 
       // Redirect to dashboard
       router.push("/dashboard");

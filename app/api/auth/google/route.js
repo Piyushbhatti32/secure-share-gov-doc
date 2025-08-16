@@ -3,12 +3,15 @@ import { NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { initializeFirebaseAdmin } from '@/lib/firebase-admin';
 
-initializeFirebaseAdmin();
+// Only initialize Firebase Admin if we're in a server environment
+if (typeof window === 'undefined') {
+  initializeFirebaseAdmin();
+}
 
 const oauth2Client = new google.auth.OAuth2(
-  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`
+  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
+  process.env.GOOGLE_CLIENT_SECRET || '',
+  `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/google/callback`
 );
 
 // Scope for Google Drive API

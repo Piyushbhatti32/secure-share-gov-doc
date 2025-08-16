@@ -16,7 +16,10 @@ export async function POST(request) {
     }
 
     const token = authHeader.split('Bearer ')[1];
-    initializeFirebaseAdmin();
+    // Only initialize Firebase Admin if we're in a server environment
+if (typeof window === 'undefined') {
+  initializeFirebaseAdmin();
+}
     const auth = getAuth();
     await auth.verifyIdToken(token);
 

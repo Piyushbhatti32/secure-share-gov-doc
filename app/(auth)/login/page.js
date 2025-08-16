@@ -6,6 +6,7 @@ import { auth, signInWithGoogle } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { handleLogin } from '@/lib/services/auth-service';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -17,7 +18,8 @@ export default function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await handleLogin(userCredential.user);
       router.push('/dashboard');
     } catch (err) {
       setError(err.message);
@@ -39,6 +41,7 @@ export default function LoginPage() {
         throw new Error('Failed to get Google access token. Please try again.');
       }
 
+      await handleLogin(user);
       router.push('/dashboard');
     } catch (err) {
       setError(err.message);

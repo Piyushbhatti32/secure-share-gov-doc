@@ -12,7 +12,8 @@
     "deploy": "next build && firebase deploy",
     "reset:all": "node scripts/resetAll.js",
     "deploy:indexes": "node scripts/deploy-indexes.js",
-    "check:indexes": "node scripts/check-indexes.js"
+    "check:indexes": "node scripts/check-indexes.js",
+    "setup:vercel": "node scripts/setup-vercel-env.js"
   },
   "dependencies": {
     "@firebase/auth": "^1.7.0",

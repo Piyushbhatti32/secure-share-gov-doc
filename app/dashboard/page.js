@@ -7,13 +7,15 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { formatDate, formatRelativeTime } from '@/lib/utils/date-utils';
-import { ActivityIcons } from '@/lib/services/activity-service';
+import { ActivityIcons, logActivity, ActivityType } from '@/lib/services/activity-service';
 
 export default function DashboardPage() {
   const [user, setUser] = useState(null);
   const [recentDocuments, setRecentDocuments] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activityLoading, setActivityLoading] = useState(true);
+  const [activityError, setActivityError] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -45,23 +47,58 @@ export default function DashboardPage() {
       }));
       setRecentDocuments(docs);
 
-      // Fetch recent activity
-      const activityQuery = query(
-        collection(db, 'activities'),
-        where('userId', '==', userId),
-        orderBy('timestamp', 'desc'),
-        limit(5)
-      );
-      const activitySnapshot = await getDocs(activityQuery);
-      const activities = activitySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setRecentActivity(activities);
+      // Fetch recent activity - try to get more activities
+      try {
+        const activityQuery = query(
+          collection(db, 'activities'),
+          where('userId', '==', userId),
+          orderBy('timestamp', 'desc'),
+          limit(10)
+        );
+        const activitySnapshot = await getDocs(activityQuery);
+        const activities = activitySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setRecentActivity(activities);
+        setActivityError(null);
+      } catch (activityError) {
+        console.error('Error fetching activities:', activityError);
+        setActivityError(activityError.message);
+        // If there's an index error, try without ordering
+        if (activityError.code === 'failed-precondition' && activityError.message.includes('index')) {
+          try {
+            const simpleActivityQuery = query(
+              collection(db, 'activities'),
+              where('userId', '==', userId),
+              limit(10)
+            );
+            const simpleActivitySnapshot = await getDocs(simpleActivityQuery);
+            const simpleActivities = simpleActivitySnapshot.docs
+              .map(doc => ({
+                id: doc.id,
+                ...doc.data()
+              }))
+              .sort((a, b) => {
+                if (!a.timestamp || !b.timestamp) return 0;
+                return b.timestamp.toDate ? b.timestamp.toDate() - a.timestamp.toDate() : 0;
+              });
+            setRecentActivity(simpleActivities);
+            setActivityError(null);
+          } catch (fallbackError) {
+            console.error('Fallback activity fetch failed:', fallbackError);
+            setRecentActivity([]);
+          }
+        } else {
+          setRecentActivity([]);
+        }
+      } finally {
+        setActivityLoading(false);
+      }
     } catch (error) {
+      console.error('Error fetching dashboard data:', error);
       if (error.code === 'failed-precondition' && error.message.includes('index')) {
         setRecentDocuments([]);
-        setRecentActivity([]);
       }
     } finally {
       setLoading(false);
@@ -206,10 +243,46 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900">Recent Activity</h2>
+              <div className="flex items-center space-x-3">
+                <button 
+                  onClick={() => fetchRecentData(user?.uid)}
+                  className="text-primary-600 hover:text-primary-800 text-sm"
+                  title="Refresh activities"
+                >
+                  <i className="fas fa-sync-alt"></i>
+                </button>
+                <Link href="/notifications" className="text-primary-600 hover:text-primary-800 text-sm">
+                  View All
+                </Link>
+              </div>
             </div>
-            {recentActivity.length > 0 ? (
+            {activityLoading ? (
+              <div className="text-center py-8">
+                <i className="fas fa-circle-notch fa-spin text-primary-600 text-xl mb-2"></i>
+                <p className="text-gray-500">Loading activities...</p>
+              </div>
+            ) : activityError ? (
+              <div className="text-center py-8">
+                <div className="text-red-400 mb-2">
+                  <i className="fas fa-exclamation-triangle text-3xl"></i>
+                </div>
+                <p className="text-red-600 mb-2">Error loading activities</p>
+                <p className="text-gray-500 text-sm">{activityError}</p>
+                <button 
+                  onClick={() => {
+                    setActivityError(null);
+                    setActivityLoading(true);
+                    fetchRecentData(user?.uid);
+                  }}
+                  className="mt-3 text-primary-600 hover:text-primary-800 text-sm"
+                >
+                  Try Again
+                </button>
+              </div>
+            ) : recentActivity.length > 0 ? (
               <ul className="divide-y divide-gray-200">
                 {recentActivity.map((activity) => (
+
                   <li key={activity.id} className="py-3">
                     <div className="flex items-center space-x-3">
                       {/* Activity Icon */}
@@ -223,7 +296,8 @@ export default function DashboardPage() {
                         activity.type === 'RECEIVE' ? 'bg-teal-100' :
                         'bg-gray-100'
                       }`}>
-                        <i className={`fas fa-${ActivityIcons[activity.type] || 'circle'} ${
+                        {/* Font Awesome Icon with Fallback */}
+                        <div className={`${
                           activity.type === 'DELETE' ? 'text-red-600' :
                           activity.type === 'UPLOAD' ? 'text-green-600' :
                           activity.type === 'SHARE' ? 'text-blue-600' :
@@ -232,7 +306,20 @@ export default function DashboardPage() {
                           activity.type === 'DOWNLOAD' ? 'text-purple-600' :
                           activity.type === 'RECEIVE' ? 'text-teal-600' :
                           'text-gray-600'
-                        }`}></i>
+                        }`}>
+                          <i className={`fas fa-${ActivityIcons[activity.type] || 'circle'}`}></i>
+                          {/* Fallback text if icon doesn't load */}
+                          <span className="text-xs font-bold sr-only">
+                            {activity.type === 'DELETE' ? '🗑' :
+                             activity.type === 'UPLOAD' ? '⬆' :
+                             activity.type === 'SHARE' ? '📤' :
+                             activity.type === 'ARCHIVE' ? '📦' :
+                             activity.type === 'RESTORE' ? '↩' :
+                             activity.type === 'DOWNLOAD' ? '⬇' :
+                             activity.type === 'RECEIVE' ? '📥' :
+                             '●'}
+                          </span>
+                        </div>
                       </div>
                       
                       {/* Activity Details */}
@@ -260,7 +347,13 @@ export default function DashboardPage() {
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-500 text-center py-4">No recent activity</p>
+              <div className="text-center py-8">
+                <div className="text-gray-400 mb-2">
+                  <i className="fas fa-history text-3xl"></i>
+                </div>
+                <p className="text-gray-500">No recent activity</p>
+                <p className="text-gray-400 text-sm mt-1">Your activities will appear here</p>
+              </div>
             )}
           </div>
         </div>

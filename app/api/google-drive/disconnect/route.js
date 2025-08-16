@@ -3,7 +3,10 @@ import { NextResponse } from 'next/server';
 import { initializeFirebaseAdmin } from '@/lib/firebase-admin';
 
 // Initialize Firebase Admin
-initializeFirebaseAdmin();
+// Only initialize Firebase Admin if we're in a server environment
+if (typeof window === 'undefined') {
+  initializeFirebaseAdmin();
+}
 
 export async function POST(request) {
   try {
