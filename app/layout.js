@@ -22,8 +22,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <Script 
-          src="https://kit.fontawesome.com/your-kit-code.js"
+          src="https://kit.fontawesome.com/a076d05399.js"
           strategy="afterInteractive"
           crossOrigin="anonymous"
         />
