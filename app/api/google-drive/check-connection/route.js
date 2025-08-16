@@ -4,6 +4,11 @@ import { NextResponse } from 'next/server';
 import { initializeFirebaseAdmin } from '@/lib/firebase-admin';
 import { refreshGoogleToken } from '@/lib/services/google-auth-service';
 
+// DEBUG: Log Firebase Admin env vars
+console.log('FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID);
+console.log('FIREBASE_CLIENT_EMAIL:', process.env.FIREBASE_CLIENT_EMAIL);
+console.log('FIREBASE_PRIVATE_KEY exists:', !!process.env.FIREBASE_PRIVATE_KEY);
+
 // Initialize Firebase Admin
 // Only initialize Firebase Admin if we're in a server environment
 if (typeof window === 'undefined') {
