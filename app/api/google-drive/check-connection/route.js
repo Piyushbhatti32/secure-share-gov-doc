@@ -59,6 +59,9 @@ export async function GET(request) {
       if (driveError.code === 401 && refreshToken) {
         try {
           accessToken = await refreshGoogleToken(decodedToken.uid, refreshToken);
+          if (!accessToken) {
+            return NextResponse.json({ error: 'Failed to refresh access token.' }, { status: 401 });
+          }
           drive = await initializeDriveClient(accessToken);
           await drive.about.get({ fields: 'user' });
           return NextResponse.json({ connected: true, refreshed: true });
