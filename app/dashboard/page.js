@@ -53,7 +53,7 @@ export default function DashboardPage() {
           collection(db, 'activities'),
           where('userId', '==', userId),
           orderBy('timestamp', 'desc'),
-          limit(10)
+          limit(5) // changed from 10 to 5
         );
         const activitySnapshot = await getDocs(activityQuery);
         const activities = activitySnapshot.docs.map(doc => ({

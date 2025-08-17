@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getUserNotifications, markNotificationsAsRead, deleteNotifications } from '@/lib/services/notification-service';
 
 export default function NotificationCenter({ userId }) {
@@ -9,11 +9,8 @@ export default function NotificationCenter({ userId }) {
   const [error, setError] = useState(null);
   const [selectedNotifications, setSelectedNotifications] = useState([]);
 
-  useEffect(() => {
-    fetchNotifications();
-  }, [userId]);
-
-  const fetchNotifications = async () => {
+  // Move fetchNotifications above useEffect
+  const fetchNotifications = useCallback(async () => {
     try {
       const userNotifications = await getUserNotifications(userId);
       setNotifications(userNotifications);
@@ -23,7 +20,11 @@ export default function NotificationCenter({ userId }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   const handleMarkAsRead = async () => {
     try {
@@ -115,7 +116,6 @@ export default function NotificationCenter({ userId }) {
               <p className="text-sm font-medium text-gray-900">
                 Notification
               </p>
-              {/* eslint-disable-next-line react/no-unescaped-entities */}
               <p className="text-sm text-gray-500">{notification.data.message}</p>
             </div>
           </div>

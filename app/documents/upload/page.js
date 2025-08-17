@@ -224,7 +224,7 @@ export default function UploadPage() {
                   </div>
                   <div className="ml-3">
                     <p className="text-sm text-blue-700">
-                      Connect your Google Drive account to upload and share documents securely.
+                      Sign in with Google to automatically connect your Google Drive account and upload documents securely.
                     </p>
                     <div className="mt-3">
                       <button
@@ -233,7 +233,7 @@ export default function UploadPage() {
                         className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                       >
                         <i className="fab fa-google mr-2"></i>
-                        Connect Google Drive
+                        Sign in with Google
                       </button>
                     </div>
                   </div>

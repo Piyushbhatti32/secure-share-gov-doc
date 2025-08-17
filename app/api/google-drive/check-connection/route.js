@@ -8,6 +8,8 @@ import { refreshGoogleToken } from '@/lib/services/google-auth-service';
 console.log('FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID);
 console.log('FIREBASE_CLIENT_EMAIL:', process.env.FIREBASE_CLIENT_EMAIL);
 console.log('FIREBASE_PRIVATE_KEY exists:', !!process.env.FIREBASE_PRIVATE_KEY);
+console.log('GOOGLE_CLIENT_SECRET exists:', !!process.env.GOOGLE_CLIENT_SECRET);
+console.log('NEXT_PUBLIC_GOOGLE_CLIENT_ID exists:', !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
 
 // Initialize Firebase Admin
 // Only initialize Firebase Admin if we're in a server environment
@@ -53,7 +55,6 @@ export async function GET(request) {
     // Get Google OAuth token
     let accessToken;
     try {
-      const auth = getAuth();
       const user = await auth.getUser(decodedToken.uid);
       
       if (user.customClaims?.google_oauth_access_token) {
@@ -103,7 +104,6 @@ export async function GET(request) {
       
       // If the token is expired, try to refresh it
       if (driveError.code === 401) {
-        const auth = getAuth();
         const user = await auth.getUser(decodedToken.uid);
         
         if (user.customClaims?.google_oauth_refresh_token) {

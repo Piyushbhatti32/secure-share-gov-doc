@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [showOtpModal, setShowOtpModal] = useState(false);
   const router = useRouter();
 
-  const handleLogin = async (e) => {
+  const handleEmailLogin = async (e) => {
     e.preventDefault();
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -102,7 +102,7 @@ export default function LoginPage() {
             <h2 className="text-xl font-bold">Login to Your Account</h2>
           </div>
           
-          <form onSubmit={handleLogin} className="py-6 px-8">
+          <form onSubmit={handleEmailLogin} className="py-6 px-8">
             {error && (
               <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
                 {error}
@@ -184,6 +184,9 @@ export default function LoginPage() {
                   </svg>
                   Sign in with Google
                 </button>
+                <p className="mt-2 text-xs text-gray-500 text-center">
+                  Includes access to Google Drive for secure document management
+                </p>
               </div>
             </div>
 
