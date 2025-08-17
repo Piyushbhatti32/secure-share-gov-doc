@@ -38,7 +38,6 @@ export async function GET(request) {
     // Store access token in Firebase custom claims
     const auth = getAuth();
     const user = await auth.getUser(state);
-    
     await auth.setCustomUserClaims(state, {
       ...user.customClaims,
       google_oauth_access_token: tokens.access_token,
