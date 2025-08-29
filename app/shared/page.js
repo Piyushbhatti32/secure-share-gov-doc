@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase';
+import { useUser } from '@clerk/nextjs';
 import { getSharedDocuments } from '@/lib/services/share-service';
 import { handleError } from '@/lib/utils/error-handler';
 import Navbar from '@/components/Navbar';
@@ -12,15 +12,14 @@ export default function SharedDocumentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const router = useRouter();
+  const { user, isLoaded } = useUser();
 
   useEffect(() => {
     const fetchSharedDocuments = async () => {
       try {
-        const userEmail = auth.currentUser?.email;
-        if (!userEmail) {
-          router.push('/login');
-          return;
-        }
+        if (!isLoaded) return;
+        const userEmail = user?.primaryEmailAddress?.emailAddress;
+        if (!userEmail) return;
 
         const sharedDocs = await getSharedDocuments(userEmail);
         setDocuments(sharedDocs);
@@ -33,16 +32,16 @@ export default function SharedDocumentsPage() {
     };
 
     fetchSharedDocuments();
-  }, [router]);
+  }, [router, isLoaded, user]);
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
+      <div className="min-h-screen bg-black">
         <Navbar />
         <div className="flex items-center justify-center h-[calc(100vh-180px)]">
           <div className="text-center">
-            <i className="fas fa-circle-notch fa-spin text-4xl text-primary-600 mb-4"></i>
-            <p className="text-gray-600">Loading shared documents...</p>
+            <i className="fa-solid fa-circle-notch fa-spin text-4xl text-blue-400 mb-4"></i>
+            <p className="text-blue-200">Loading shared documents...</p>
           </div>
         </div>
       </div>
@@ -50,60 +49,60 @@ export default function SharedDocumentsPage() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
+    <div className="min-h-screen bg-black">
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="card">
-          <div className="card-header flex justify-between items-center">
+        <div className="bg-black/40 backdrop-blur-sm rounded-xl border border-blue-500/30 p-6 electric-border">
+          <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Shared Documents</h1>
-              <p className="text-sm text-gray-500">Documents shared with you by other users</p>
+              <h1 className="text-2xl font-bold text-white electric-text">Shared Documents</h1>
+              <p className="text-sm text-blue-200">Documents shared with you by other users</p>
             </div>
           </div>
 
           {error && (
-            <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <div className="mb-4 bg-red-900/50 border border-red-500/50 text-red-200 px-4 py-3 rounded">
               {error}
             </div>
           )}
 
           {documents.length === 0 ? (
-            <div className="card-body text-center py-12">
-              <div className="mx-auto h-12 w-12 text-gray-400">
-                <i className="fas fa-folder-open text-4xl"></i>
+            <div className="text-center py-12">
+              <div className="mx-auto h-12 w-12 text-blue-400">
+                <i className="fa-solid fa-folder-open text-4xl"></i>
               </div>
-              <h3 className="mt-2 text-sm font-semibold text-gray-900">No shared documents</h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <h3 className="mt-2 text-sm font-semibold text-white">No shared documents</h3>
+              <p className="mt-1 text-sm text-blue-200">
                 No documents have been shared with you yet.
               </p>
             </div>
           ) : (
-            <div className="card-body">
+            <div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {documents.map(doc => (
                   <div
                     key={doc.id}
-                    className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                    className="bg-black/20 p-4 rounded-lg border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 electric-border"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
-                        <h2 className="text-lg font-semibold text-gray-900 truncate">
+                        <h2 className="text-lg font-semibold text-white truncate">
                           {doc.name}
                         </h2>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-blue-200">
                           Shared by: {doc.sharedByEmail}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-blue-200">
                           Shared on: {new Date(doc.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="ml-4">
                         <button
                           onClick={() => router.push(`/documents/${doc.id}`)}
-                          className="text-primary-600 hover:text-primary-800"
+                          className="text-blue-400 hover:text-blue-300 transition-colors duration-300"
                         >
-                          <i className="fas fa-external-link-alt"></i>
+                          <i className="fa-solid fa-up-right-from-square"></i>
                         </button>
                       </div>
                     </div>

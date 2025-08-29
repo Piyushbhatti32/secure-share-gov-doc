@@ -1,45 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
-import { db, auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { formatDate, formatRelativeTime } from '@/lib/utils/date-utils';
 import { ActivityIcons, logActivity, ActivityType } from '@/lib/services/activity-service';
-
-// Helper function to format file size
-const formatFileSize = (bytes) => {
-  if (!bytes || bytes === 0) return '0 Bytes';
-  
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
-
-// Helper function to extract browser information from user agent
-const getBrowserInfo = (userAgent) => {
-  if (!userAgent || userAgent === 'unknown') return 'Unknown';
-  
-  // Simple browser detection
-  if (userAgent.includes('Chrome')) return 'Chrome';
-  if (userAgent.includes('Firefox')) return 'Firefox';
-  if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) return 'Safari';
-  if (userAgent.includes('Edge')) return 'Edge';
-  if (userAgent.includes('Opera')) return 'Opera';
-  
-  // Device detection
-  if (userAgent.includes('Mobile')) return 'Mobile Browser';
-  if (userAgent.includes('Tablet')) return 'Tablet Browser';
-  
-  return 'Browser';
-};
+import { useUser, useAuth } from '@clerk/nextjs';
+import mockDataService from '@/lib/services/mock-data-service';
 
 export default function DashboardPage() {
-  const [user, setUser] = useState(null);
+  const { user, isLoaded, isSignedIn } = useUser();
+  const { userId } = useAuth();
   const [recentDocuments, setRecentDocuments] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,459 +20,242 @@ export default function DashboardPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-      setUser(user);
-      fetchRecentData(user.uid);
-    });
+    if (!isLoaded) return;
 
-    return () => unsubscribe();
-  }, [router]);
+    if (!isSignedIn) {
+      router.push('/sign-in');
+      return;
+    }
+    
+    fetchRecentData(userId);
+    setLoading(false);
+  }, [isLoaded, isSignedIn, userId, router]);
 
-  const fetchRecentData = async (userId) => {
+  const fetchRecentData = async (currentUserId) => {
     try {
-      // Fetch recent documents
-      const docsQuery = query(
-        collection(db, 'documents'),
-        where('userId', '==', userId),
-        orderBy('createdAt', 'desc'),
-        limit(5)
-      );
-      const docsSnapshot = await getDocs(docsQuery);
-      const docs = docsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setRecentDocuments(docs);
+      // Fetch recent documents using mock service
+      const docs = await mockDataService.getDocuments(currentUserId);
+      setRecentDocuments(docs.slice(0, 5));
 
-      // Fetch recent activity - try to get more activities
-      try {
-        const activityQuery = query(
-          collection(db, 'activities'),
-          where('userId', '==', userId),
-          orderBy('timestamp', 'desc'),
-          limit(10) // Show more activities for better visibility
-        );
-        const activitySnapshot = await getDocs(activityQuery);
-        const activities = activitySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setRecentActivity(activities);
-        setActivityError(null);
-      } catch (activityError) {
-        console.error('Error fetching activities:', activityError);
-        setActivityError(activityError.message);
-        // If there's an index error, try without ordering
-        if (activityError.code === 'failed-precondition' && activityError.message.includes('index')) {
-          try {
-            const simpleActivityQuery = query(
-              collection(db, 'activities'),
-              where('userId', '==', userId),
-              limit(10)
-            );
-            const simpleActivitySnapshot = await getDocs(simpleActivityQuery);
-            const simpleActivities = simpleActivitySnapshot.docs
-              .map(doc => ({
-                id: doc.id,
-                ...doc.data()
-              }))
-              .sort((a, b) => {
-                if (!a.timestamp || !b.timestamp) return 0;
-                return b.timestamp.toDate ? b.timestamp.toDate() - a.timestamp.toDate() : 0;
-              });
-            setRecentActivity(simpleActivities);
-            setActivityError(null);
-          } catch (fallbackError) {
-            console.error('Fallback activity fetch failed:', fallbackError);
-            setRecentActivity([]);
-          }
-        } else {
-          setRecentActivity([]);
-        }
-      } finally {
-        setActivityLoading(false);
-      }
+      // Fetch recent activity using mock service
+      const activities = await mockDataService.getActivities(currentUserId);
+      setRecentActivity(activities.slice(0, 10));
+      setActivityLoading(false);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      if (error.code === 'failed-precondition' && error.message.includes('index')) {
-        setRecentDocuments([]);
-      }
-    } finally {
-      setLoading(false);
+      setActivityError('Failed to load recent activity');
+      setActivityLoading(false);
     }
   };
 
-  if (loading) {
+  if (loading || !isLoaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <i className="fas fa-circle-notch fa-spin text-4xl text-primary-600 mb-4"></i>
-          <p className="text-gray-600">Loading dashboard...</p>
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-blue-200">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
+    <div className="min-h-screen bg-black">
       <Navbar />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-6 sm:py-8">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {user?.displayName || 'User'}!
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white electric-text mb-2">
+            Welcome back, {user?.fullName || user?.emailAddresses[0]?.emailAddress}!
           </h1>
-          <p className="text-gray-600">
-            Manage your government documents securely and efficiently.
-          </p>
+          <p className="text-blue-200 text-sm sm:text-base">Here's what's happening with your documents today.</p>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
-            <Link href="/documents/upload" className="block">
-              <div className="text-primary-600 mb-3">
-                <i className="fas fa-upload text-2xl"></i>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+          <div className="bg-black/40 backdrop-blur-sm rounded-xl border border-blue-500/30 p-4 sm:p-6 electric-border corner-border corner-blue corner-fast radius-xl">
+            <div className="flex items-center">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center electric-glow flex-shrink-0">
+                <i className="fa-solid fa-file-lines text-lg sm:text-xl text-white"></i>
               </div>
-              <h3 className="text-lg font-semibold mb-2">Upload Document</h3>
-              <p className="text-gray-600 text-sm">
-                Upload and securely store your important documents.
-              </p>
-            </Link>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
-            <Link href="/documents" className="block">
-              <div className="text-primary-600 mb-3">
-                <i className="fas fa-folder text-2xl"></i>
+              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                <p className="text-blue-200 text-xs sm:text-sm">Total Documents</p>
+                <p className="text-xl sm:text-2xl font-bold text-white truncate">{recentDocuments.length}</p>
               </div>
-              <h3 className="text-lg font-semibold mb-2">My Documents</h3>
-              <p className="text-gray-600 text-sm">
-                View and manage your uploaded documents.
-              </p>
-            </Link>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
-            <Link href="/documents/share" className="block">
-              <div className="text-primary-600 mb-3">
-                <i className="fas fa-share-alt text-2xl"></i>
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Share Documents</h3>
-              <p className="text-gray-600 text-sm">
-                Share documents with family members securely.
-              </p>
-            </Link>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
-            <Link href="/security" className="block">
-              <div className="text-primary-600 mb-3">
-                <i className="fas fa-shield-alt text-2xl"></i>
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Security Settings</h3>
-              <p className="text-gray-600 text-sm">
-                Manage 2FA, encryption, and security preferences.
-              </p>
-            </Link>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
-            <Link href="/notifications" className="block">
-              <div className="text-primary-600 mb-3">
-                <i className="fas fa-bell text-2xl"></i>
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Notifications</h3>
-              <p className="text-gray-600 text-sm">
-                View security alerts and activity notifications.
-              </p>
-            </Link>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
-            <Link href="/profile" className="block">
-              <div className="text-primary-600 mb-3">
-                <i className="fas fa-user-cog text-2xl"></i>
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Profile Settings</h3>
-              <p className="text-gray-600 text-sm">
-                Update your profile and preferences.
-              </p>
-            </Link>
-          </div>
-        </div>
-
-        {/* Activity Statistics */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Activity Summary</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
-                {recentActivity.filter(a => a.type === 'UPLOAD').length}
-              </div>
-              <div className="text-sm text-gray-600">Uploads</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {recentActivity.filter(a => a.type === 'SHARE').length}
+          </div>
+
+          <div className="bg-black/40 backdrop-blur-sm rounded-xl border border-green-500/30 p-4 sm:p-6 electric-border corner-border corner-green corner-normal radius-lg">
+            <div className="flex items-center">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg flex items-center justify-center electric-glow flex-shrink-0">
+                <i className="fa-solid fa-share-nodes text-lg sm:text-xl text-white"></i>
               </div>
-              <div className="text-sm text-gray-600">Shares</div>
+              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                <p className="text-green-200 text-xs sm:text-sm">Shared</p>
+                <p className="text-xl sm:text-2xl font-bold text-white truncate">0</p>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">
-                {recentActivity.filter(a => a.type === 'DOWNLOAD').length}
+          </div>
+
+          <div className="bg-black/40 backdrop-blur-sm rounded-xl border border-purple-500/30 p-4 sm:p-6 electric-border corner-border corner-purple corner-slow radius-2xl">
+            <div className="flex items-center">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center electric-glow flex-shrink-0">
+                <i className="fa-solid fa-download text-lg sm:text-xl text-white"></i>
               </div>
-              <div className="text-sm text-gray-600">Downloads</div>
+              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                <p className="text-purple-200 text-xs sm:text-sm">Downloads</p>
+                <p className="text-xl sm:text-2xl font-bold text-white truncate">0</p>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-emerald-600">
-                {recentActivity.filter(a => a.type === 'LOGIN').length}
+          </div>
+
+          <div className="bg-black/40 backdrop-blur-sm rounded-xl border border-yellow-500/30 p-4 sm:p-6 electric-border corner-border corner-cyan corner-very-slow radius-3xl">
+            <div className="flex items-center">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-lg flex items-center justify-center electric-glow flex-shrink-0">
+                <i className="fa-solid fa-bell text-lg sm:text-xl text-white"></i>
               </div>
-              <div className="text-sm text-gray-600">Logins</div>
+              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                <p className="text-yellow-200 text-xs sm:text-sm">Notifications</p>
+                <p className="text-xl sm:text-2xl font-bold text-white truncate">0</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Activity Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
           {/* Recent Documents */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">Recent Documents</h2>
-              <Link href="/documents" className="text-primary-600 hover:text-primary-800">
+          <div className="bg-black/40 backdrop-blur-sm rounded-xl border border-blue-500/30 p-4 sm:p-6 electric-border corner-border corner-blue corner-reverse radius-xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white electric-text">Recent Documents</h2>
+              <Link 
+                href="/documents" 
+                className="text-blue-400 hover:text-blue-300 transition-colors duration-300"
+              >
                 View All
               </Link>
             </div>
-            {recentDocuments.length > 0 ? (
-              <ul className="divide-y divide-gray-200">
-                {recentDocuments.map((doc) => (
-                  <li key={doc.id} className="py-3">
-                    <Link href={`/documents/${doc.id}`} className="block hover:bg-gray-50">
-                      <div className="flex items-center">
-                        <i className="fas fa-file-alt text-primary-600 mr-3"></i>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{doc.name}</p>
-                          <p className="text-sm text-gray-500">
-                            {formatRelativeTime(doc.createdAt)}
-                          </p>
-                        </div>
-                      </div>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+            
+            {recentDocuments.length === 0 ? (
+              <div className="text-center py-6 sm:py-8">
+                <i className="fa-solid fa-file-lines text-3xl sm:text-4xl text-blue-400 mb-3 sm:mb-4"></i>
+                <p className="text-blue-200 mb-3 sm:mb-4 text-sm sm:text-base">No documents yet</p>
+                <Link 
+                  href="/documents" 
+                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-4 sm:px-6 py-2 rounded-lg transition-all duration-300 electric-glow text-sm sm:text-base"
+                >
+                  Upload Your First Document
+                </Link>
+              </div>
             ) : (
-              <p className="text-gray-500 text-center py-4">No recent documents</p>
+              <div className="space-y-4">
+                {recentDocuments.map((doc) => (
+                  <div key={doc.id} className="flex items-center justify-between p-3 sm:p-4 bg-black/20 rounded-lg border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300">
+                    <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i className="fa-solid fa-file-lines text-white text-sm sm:text-base"></i>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-white font-medium text-sm sm:text-base truncate">{doc.name}</p>
+                        <p className="text-blue-200 text-xs sm:text-sm">{formatRelativeTime(doc.createdAt)}</p>
+                      </div>
+                    </div>
+                    <Link 
+                      href={`/documents/${doc.id}`}
+                      className="text-blue-400 hover:text-blue-300 transition-colors duration-300 flex-shrink-0 ml-2"
+                    >
+                      <i className="fa-solid fa-up-right-from-square"></i>
+                    </Link>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">Recent Activity</h2>
-              <div className="flex items-center space-x-3">
-                <button 
-                  onClick={() => fetchRecentData(user?.uid)}
-                  className="text-primary-600 hover:text-primary-800 text-sm"
-                  title="Refresh activities"
-                >
-                  <i className="fas fa-sync-alt"></i>
-                </button>
-                <Link href="/notifications" className="text-primary-600 hover:text-primary-800 text-sm">
-                  View All
-                </Link>
-              </div>
+          <div className="bg-black/40 backdrop-blur-sm rounded-xl border border-blue-500/30 p-4 sm:p-6 electric-border corner-border corner-cyan corner-bold radius-lg">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white electric-text">Recent Activity</h2>
+              <Link 
+                href="/notifications" 
+                className="text-blue-400 hover:text-blue-300 transition-colors duration-300"
+              >
+                View All
+              </Link>
             </div>
+            
             {activityLoading ? (
-              <div className="text-center py-8">
-                <i className="fas fa-circle-notch fa-spin text-primary-600 text-xl mb-2"></i>
-                <p className="text-gray-500">Loading activities...</p>
+              <div className="text-center py-6 sm:py-8">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3 sm:mb-4"></div>
+                <p className="text-blue-200 text-sm sm:text-base">Loading activity...</p>
               </div>
             ) : activityError ? (
-              <div className="text-center py-8">
-                <div className="text-red-400 mb-2">
-                  <i className="fas fa-exclamation-triangle text-3xl"></i>
-                </div>
-                <p className="text-red-600 mb-2">Error loading activities</p>
-                <p className="text-gray-500 text-sm">{activityError}</p>
-                <button 
-                  onClick={() => {
-                    setActivityError(null);
-                    setActivityLoading(true);
-                    fetchRecentData(user?.uid);
-                  }}
-                  className="mt-3 text-primary-600 hover:text-primary-800 text-sm"
-                >
-                  Try Again
-                </button>
+              <div className="text-center py-6 sm:py-8">
+                <i className="fa-solid fa-triangle-exclamation text-3xl sm:text-4xl text-red-400 mb-3 sm:mb-4"></i>
+                <p className="text-red-200 text-sm sm:text-base">{activityError}</p>
               </div>
-            ) : recentActivity.length > 0 ? (
-              <ul className="divide-y divide-gray-200">
-                {recentActivity.map((activity) => (
-                  <li key={activity.id} className="py-4">
-                    <div className="flex items-start space-x-3">
-                      {/* Activity Icon */}
-                      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                        activity.type === 'DELETE' ? 'bg-red-100' :
-                        activity.type === 'UPLOAD' ? 'bg-green-100' :
-                        activity.type === 'SHARE' ? 'bg-blue-100' :
-                        activity.type === 'ARCHIVE' ? 'bg-yellow-100' :
-                        activity.type === 'RESTORE' ? 'bg-indigo-100' :
-                        activity.type === 'DOWNLOAD' ? 'bg-purple-100' :
-                        activity.type === 'RECEIVE' ? 'bg-teal-100' :
-                        activity.type === 'LOGIN' ? 'bg-emerald-100' :
-                        activity.type === 'LOGOUT' ? 'bg-orange-100' :
-                        activity.type === 'PROFILE_UPDATE' ? 'bg-pink-100' :
-                        'bg-gray-100'
-                      }`}>
-                        <div className={`${
-                          activity.type === 'DELETE' ? 'text-red-600' :
-                          activity.type === 'UPLOAD' ? 'text-green-600' :
-                          activity.type === 'SHARE' ? 'text-blue-600' :
-                          activity.type === 'ARCHIVE' ? 'text-yellow-600' :
-                          activity.type === 'RESTORE' ? 'text-indigo-600' :
-                          activity.type === 'DOWNLOAD' ? 'text-purple-600' :
-                          activity.type === 'RECEIVE' ? 'text-teal-600' :
-                          activity.type === 'LOGIN' ? 'text-emerald-600' :
-                          activity.type === 'LOGOUT' ? 'text-orange-600' :
-                          activity.type === 'PROFILE_UPDATE' ? 'text-pink-600' :
-                          'text-gray-600'
-                        }`}>
-                          <i className={`fas fa-${ActivityIcons[activity.type] || 'circle'}`}></i>
-                        </div>
-                      </div>
-                      
-                      {/* Activity Details */}
-                      <div className="flex-grow min-w-0">
-                        {/* Main Activity Description */}
-                        <div className="flex items-start justify-between">
-                          <div className="flex-grow">
-                            <p className="text-sm font-medium text-gray-900 leading-tight">
-                              {activity.description}
-                            </p>
-                            
-                            {/* Additional Details */}
-                            {activity.details && (
-                              <div className="mt-2 space-y-1">
-                                {/* File Information */}
-                                {activity.details.fileName && (
-                                  <div className="flex items-center text-xs text-gray-600">
-                                    <i className="fas fa-file-alt mr-1"></i>
-                                    <span className="truncate">{activity.details.fileName}</span>
-                                    {activity.details.fileSize && (
-                                      <span className="ml-2 text-gray-500">
-                                        ({formatFileSize(activity.details.fileSize)})
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-                                
-                                {/* Document Type */}
-                                {activity.details.documentType && (
-                                  <div className="flex items-center text-xs text-gray-600">
-                                    <i className="fas fa-tag mr-1"></i>
-                                    <span className="bg-gray-100 px-2 py-1 rounded-full">
-                                      {activity.details.documentType}
-                                    </span>
-                                  </div>
-                                )}
-                                
-                                {/* Sharing Details */}
-                                {activity.details.sharedWith && (
-                                  <div className="flex items-center text-xs text-gray-600">
-                                    <i className="fas fa-users mr-1"></i>
-                                    <span>Shared with {activity.details.sharedWith}</span>
-                                  </div>
-                                )}
-                                
-                                {/* IP Address */}
-                                {activity.details.ipAddress && activity.details.ipAddress !== 'unknown' && (
-                                  <div className="flex items-center text-xs text-gray-500">
-                                    <i className="fas fa-globe mr-1"></i>
-                                    <span>IP: {activity.details.ipAddress}</span>
-                                  </div>
-                                )}
-                                
-                                {/* User Agent (Browser/Device) */}
-                                {activity.details.userAgent && activity.details.userAgent !== 'unknown' && (
-                                  <div className="flex items-center text-xs text-gray-500">
-                                    <i className="fas fa-desktop mr-1"></i>
-                                    <span className="truncate" title={activity.details.userAgent}>
-                                      {getBrowserInfo(activity.details.userAgent)}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Timestamp */}
-                          <div className="flex-shrink-0 ml-2">
-                            <p className="text-xs text-gray-500 whitespace-nowrap">
-                              {formatRelativeTime(activity.timestamp)}
-                            </p>
-                            <p className="text-xs text-gray-400 whitespace-nowrap">
-                              {formatDate(activity.timestamp)}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        {/* Action Links */}
-                        <div className="flex items-center space-x-3 mt-2">
-                          {activity.details?.documentId && (
-                            <Link 
-                              href={`/documents/${activity.details.documentId}`}
-                              className="text-xs text-primary-600 hover:text-primary-800 flex items-center"
-                            >
-                              <i className="fas fa-eye mr-1"></i>
-                              View Document
-                            </Link>
-                          )}
-                          
-                          {activity.details?.downloadUrl && (
-                            <a 
-                              href={activity.details.downloadUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-green-600 hover:text-green-800 flex items-center"
-                            >
-                              <i className="fas fa-download mr-1"></i>
-                              Download
-                            </a>
-                          )}
-                          
-                          {activity.type === 'SHARE' && activity.details?.shareId && (
-                            <Link 
-                              href={`/shared/${activity.details.shareId}`}
-                              className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
-                            >
-                              <i className="fas fa-external-link-alt mr-1"></i>
-                              View Share
-                            </Link>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+            ) : recentActivity.length === 0 ? (
+              <div className="text-center py-6 sm:py-8">
+                <i className="fa-solid fa-clock-rotate-left text-3xl sm:text-4xl text-blue-400 mb-3 sm:mb-4"></i>
+                <p className="text-blue-200 text-sm sm:text-base">No recent activity</p>
+              </div>
             ) : (
-              <div className="text-center py-8">
-                <div className="text-gray-400 mb-2">
-                  <i className="fas fa-history text-3xl"></i>
-                </div>
-                <p className="text-gray-500">No recent activity</p>
-                <p className="text-gray-400 text-sm mt-1">Your activities will appear here</p>
+              <div className="space-y-4">
+                {recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-center space-x-2 sm:space-x-3 p-3 sm:p-4 bg-black/20 rounded-lg border border-blue-500/20">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <i className={`${ActivityIcons[activity.type] || 'fa-solid fa-info-circle'} text-white text-xs sm:text-sm`}></i>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-xs sm:text-sm truncate">{activity.description}</p>
+                      <p className="text-blue-200 text-xs">{formatRelativeTime(activity.timestamp)}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
         </div>
-      </main>
+
+        {/* Quick Actions */}
+        <div className="mt-8 bg-black/40 backdrop-blur-sm rounded-xl border border-blue-500/30 p-4 sm:p-6 electric-border corner-border corner-purple corner-pulse radius-2xl">
+          <h2 className="text-xl font-bold text-white electric-text mb-6">Quick Actions</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+            <Link 
+              href="/documents" 
+              className="flex items-center space-x-3 p-3 sm:p-4 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 hover:from-blue-600/30 hover:to-cyan-600/30 rounded-lg border border-blue-500/30 transition-all duration-300 electric-border"
+            >
+              <i className="fa-solid fa-upload text-xl sm:text-2xl text-blue-400 flex-shrink-0"></i>
+              <div className="min-w-0 flex-1">
+                <p className="text-white font-medium text-sm sm:text-base">Upload Document</p>
+                <p className="text-blue-200 text-xs sm:text-sm">Add new files to your collection</p>
+              </div>
+            </Link>
+            
+            <Link 
+              href="/shared" 
+              className="flex items-center space-x-3 p-3 sm:p-4 bg-gradient-to-r from-green-600/20 to-emerald-600/20 hover:from-green-600/30 hover:to-emerald-600/30 rounded-lg border border-green-500/30 transition-all duration-300 electric-border"
+            >
+              <i className="fa-solid fa-share-nodes text-xl sm:text-2xl text-green-400 flex-shrink-0"></i>
+              <div className="min-w-0 flex-1">
+                <p className="text-white font-medium text-sm sm:text-base">Share Documents</p>
+                <p className="text-green-200 text-xs sm:text-sm">Share with family members</p>
+              </div>
+            </Link>
+            
+            <Link 
+              href="/security" 
+              className="flex items-center space-x-3 p-3 sm:p-4 bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600/30 hover:to-pink-600/30 rounded-lg border border-purple-500/30 transition-all duration-300 electric-border"
+            >
+              <i className="fa-solid fa-shield-halved text-xl sm:text-2xl text-purple-400 flex-shrink-0"></i>
+              <div className="min-w-0 flex-1">
+                <p className="text-white font-medium text-sm sm:text-base">Security Settings</p>
+                <p className="text-purple-200 text-xs sm:text-sm">Manage your security preferences</p>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

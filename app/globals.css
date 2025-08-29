@@ -2,6 +2,151 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * UNIVERSAL CORNER SPINNING ANIMATIONS
+ * ===================================
+ * 
+ * These classes can be applied to ANY element to add beautiful corner-only spinning animations.
+ * 
+ * BASIC USAGE:
+ * - Add .corner-border to any element
+ * - Combine with color, speed, and effect classes
+ * 
+ * EXAMPLES:
+ * <div class="corner-border corner-blue corner-fast radius-lg">
+ * <button class="corner-border corner-green corner-slow corner-glow">
+ * <div class="corner-border corner-purple corner-reverse corner-bold">
+ * 
+ * AVAILABLE CLASSES:
+ * 
+ * Base: .corner-border
+ * Colors: .corner-blue, .corner-cyan, .corner-green, .corner-purple, .corner-red, .corner-orange, .corner-yellow, .corner-pink
+ * Speeds: .corner-fast (2s), .corner-normal (4s), .corner-slow (6s), .corner-very-slow (8s)
+ * Effects: .corner-glow, .corner-subtle, .corner-bold
+ * Sizes: .corner-thin, .corner-thick, .corner-extra-thick
+ * Directions: .corner-reverse
+ * Radius: .radius-sm, .radius-md, .radius-lg, .radius-xl, .radius-2xl, .radius-3xl, .radius-full
+ * Animations: .corner-pulse, .corner-bounce, .corner-fade
+ * Hover: .corner-hover
+ * Mobile: .corner-mobile-subtle, .corner-mobile-hidden
+ */
+
+/* Electric Energy Theme Variables */
+:root {
+  --electric-blue: #00bfff;
+  --electric-cyan: #00ffff;
+  --electric-purple: #8a2be2;
+  --electric-glow: 0 0 20px rgba(0, 191, 255, 0.5);
+  --edge-width: 2px;
+  --edge-thickness: 2px;
+  --corner-size: 40%;
+  --corner-color: #00d4ff;
+  --corner-color-secondary: #ff00ff;
+  --spin-duration: 4s;
+  --corner-radius: inherit;
+}
+
+/* Global Electric Energy Styles */
+body {
+  background: radial-gradient(circle at center, #001122 0%, #000000 100%);
+  color: #ffffff;
+}
+
+/* Electric Energy Utility Classes */
+.electric-glow {
+  box-shadow: 0 0 20px rgba(0, 191, 255, 0.5);
+}
+
+.electric-border {
+  border: 1px solid rgba(0, 191, 255, 0.3);
+  box-shadow: 0 0 10px rgba(0, 191, 255, 0.2);
+}
+
+.electric-text {
+  text-shadow: 0 0 10px rgba(0, 191, 255, 0.8);
+}
+
+/* Enhanced Electric Effects */
+.electric-glow-hover:hover {
+  box-shadow: 0 0 30px rgba(0, 191, 255, 0.7);
+  transition: box-shadow 0.3s ease;
+}
+
+.electric-border-hover:hover {
+  border-color: rgba(0, 191, 255, 0.6);
+  box-shadow: 0 0 15px rgba(0, 191, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+/* Electric Animation Classes */
+@keyframes electric-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 191, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(0, 191, 255, 0.8);
+  }
+}
+
+.electric-pulse {
+  animation: electric-pulse 2s ease-in-out infinite;
+}
+
+@keyframes electric-spark {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.electric-spark {
+  animation: electric-spark 1.5s ease-in-out infinite;
+}
+
+/* Custom Scrollbar for Electric Theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 17, 34, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, var(--electric-blue), var(--electric-cyan));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, var(--electric-cyan), var(--electric-purple));
+}
+
+/* Focus States for Electric Theme */
+.electric-focus:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 191, 255, 0.3);
+  border-color: var(--electric-blue);
+}
+
+/* Selection Colors */
+::selection {
+  background: rgba(0, 191, 255, 0.3);
+  color: #ffffff;
+}
+
+::-moz-selection {
+  background: rgba(0, 191, 255, 0.3);
+  color: #ffffff;
+}
+
 
 
 :root {
@@ -83,5 +228,511 @@
 
   .card-footer {
     @apply px-6 py-4 bg-gray-50 border-t border-gray-200;
+  }
+}
+
+.cl-footer{
+  display: none;
+}
+
+.cl-userButtonPopoverFooter{
+  display: none;
+}
+
+.cl-internal-1dauvpw{
+  display: none;
+}
+
+/* Font Awesome Icon Styles */
+.fa,
+.fas,
+.fa-solid {
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  display: inline-block;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1;
+}
+
+.far,
+.fa-regular {
+  font-family: "Font Awesome 6 Free";
+  font-weight: 400;
+  display: inline-block;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1;
+}
+
+.fal,
+.fa-light {
+  font-family: "Font Awesome 6 Pro";
+  font-weight: 300;
+  display: inline-block;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1;
+}
+
+.fad,
+.fa-duotone {
+  font-family: "Font Awesome 6 Duotone";
+  font-weight: 900;
+  display: inline-block;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1;
+}
+
+.fab,
+.fa-brands {
+  font-family: "Font Awesome 6 Brands";
+  font-weight: 400;
+  display: inline-block;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1;
+}
+
+/* Animated edge lighting (Tron-style) */
+.edge-light { position: relative; z-index: 0; overflow: visible; isolation: isolate; }
+/* Keep content above edge glow, without changing markup */
+.edge-light > * { position: relative; z-index: 2; }
+
+.edge-light::before {
+  content: "";
+  position: absolute;
+  inset: 0; /* align to edges; ring only */
+  padding: var(--edge-thickness, 2px);
+  border-radius: inherit;
+  /* Corner-only conic highlights */
+  background:
+    conic-gradient(from 0deg, transparent, blue) top left / var(--corner-size) var(--corner-size) no-repeat,
+    conic-gradient(from 90deg, transparent, blue) top right / var(--corner-size) var(--corner-size) no-repeat,
+    conic-gradient(from 180deg, transparent, blue) bottom right / var(--corner-size) var(--corner-size) no-repeat,
+    conic-gradient(from 270deg, transparent, blue) bottom left / var(--corner-size) var(--corner-size) no-repeat;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude; /* show only the border ring */
+  pointer-events: none;
+  z-index: -1; /* behind the container content */
+  will-change: transform;
+  animation: edge-rotate 8s linear infinite;
+}
+
+.edge-light::after {
+  content: "";
+  position: absolute;
+  inset: 0; /* follow edge ring */
+  padding: var(--edge-thickness, 2px);
+  border-radius: inherit;
+  background:
+    conic-gradient(from 0deg, transparent, blue) top left / var(--corner-size) var(--corner-size) no-repeat,
+    conic-gradient(from 90deg, transparent, blue) top right / var(--corner-size) var(--corner-size) no-repeat,
+    conic-gradient(from 180deg, transparent, blue) bottom right / var(--corner-size) var(--corner-size) no-repeat,
+    conic-gradient(from 270deg, transparent, blue) bottom left / var(--corner-size) var(--corner-size) no-repeat;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude; /* show only glow on the border ring */
+  filter: blur(10px);
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: -2; /* place glow further behind */
+  will-change: transform;
+  animation: edge-rotate 8s linear infinite reverse;
+}
+
+@keyframes edge-rotate { to { transform: rotate(360deg); } }
+
+/* Ensure the custom property animates smoothly */
+@property --edge-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* Example-style full edge rotating glow */
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.edge-spin {
+  position: relative;
+  border-radius: inherit;
+  z-index: 1;
+}
+
+.edge-spin::after,
+.edge-spin::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: var(--edge-width, 2px);
+  border-radius: inherit;
+  /* Corner-only conic highlights with spinning animation */
+  background:
+    conic-gradient(from var(--angle), transparent 70%, blue) top left / var(--corner-size) var(--corner-size) no-repeat,
+    conic-gradient(from calc(var(--angle) + 90deg), transparent 70%, blue) top right / var(--corner-size) var(--corner-size) no-repeat,
+    conic-gradient(from calc(var(--angle) + 180deg), transparent 70%, blue) bottom right / var(--corner-size) var(--corner-size) no-repeat,
+    conic-gradient(from calc(var(--angle) + 270deg), transparent 70%, blue) bottom left / var(--corner-size) var(--corner-size) no-repeat;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude; /* show only the border ring */
+  pointer-events: none;
+  z-index: -1;
+  will-change: transform;
+  animation: spin 4s linear infinite;
+}
+
+.edge-spin::before {
+  filter: blur(16px);
+  opacity: 0.4;
+  z-index: -2; /* place glow further behind */
+}
+
+@keyframes spin {
+  from { --angle: 0deg; }
+  to { --angle: 360deg; }
+}
+
+/* Utility classes for customizing corner sizes */
+.corner-small {
+  --corner-size: 25%;
+}
+
+.corner-medium {
+  --corner-size: 40%;
+}
+
+.corner-large {
+  --corner-size: 50%;
+}
+
+/* Corner radius utilities */
+.radius-none {
+  --corner-radius: 0;
+}
+
+.radius-sm {
+  --corner-radius: 0.375rem; /* 6px */
+}
+
+.radius-md {
+  --corner-radius: 0.5rem; /* 8px */
+}
+
+.radius-lg {
+  --corner-radius: 0.75rem; /* 12px */
+}
+
+.radius-xl {
+  --corner-radius: 1rem; /* 16px */
+}
+
+.radius-2xl {
+  --corner-radius: 1.5rem; /* 24px */
+}
+
+.radius-3xl {
+  --corner-radius: 2rem; /* 32px */
+}
+
+.radius-full {
+  --corner-radius: 9999px;
+}
+
+/* Utility classes for customizing edge widths */
+.edge-thin {
+  --edge-width: 1px;
+  --edge-thickness: 1px;
+}
+
+.edge-normal {
+  --edge-width: 2px;
+  --edge-thickness: 2px;
+}
+
+.edge-thick {
+  --edge-width: 3px;
+  --edge-thickness: 3px;
+}
+
+/* New corner-only spinning animations inspired by the HTML examples */
+.corner-spin {
+  position: relative;
+  border-radius: var(--corner-radius, inherit);
+  z-index: 1;
+}
+
+.corner-spin::after,
+.corner-spin::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: var(--edge-width, 2px);
+  border-radius: inherit;
+  /* Single spinning arc that moves around corners */
+  background: conic-gradient(from var(--angle), transparent 70%, var(--corner-color, #00d4ff) 85%, transparent 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+  will-change: transform;
+  animation: corner-spin var(--spin-duration, 4s) linear infinite;
+}
+
+.corner-spin::before {
+  filter: blur(0.5rem);
+  opacity: 0.4;
+  z-index: -2;
+}
+
+@keyframes corner-spin {
+  from { --angle: 0deg; }
+  to { --angle: 360deg; }
+}
+
+/* Corner spin variants with different colors and speeds */
+.corner-spin-blue {
+  --corner-color: #00d4ff;
+  --spin-duration: 4s;
+}
+
+.corner-spin-cyan {
+  --corner-color: #00ffff;
+  --spin-duration: 3s;
+}
+
+.corner-spin-green {
+  --corner-color: #00ff88;
+  --spin-duration: 5s;
+}
+
+.corner-spin-purple {
+  --corner-color: #8a2be2;
+  --spin-duration: 6s;
+}
+
+.corner-spin-reverse {
+  animation-direction: reverse;
+}
+
+/* Corner spin with gradient effect */
+.corner-spin-gradient::after,
+.corner-spin-gradient::before {
+  background: conic-gradient(from var(--angle), transparent 60%, var(--corner-color, #00ffff) 80%, transparent 90%);
+}
+
+/* Corner spin with dual colors */
+.corner-spin-dual::after,
+.corner-spin-dual::before {
+  background: conic-gradient(from var(--angle), transparent 50%, var(--corner-color, #8a2be2) 60%, var(--corner-color-secondary, #ff00ff) 70%, transparent 80%);
+}
+
+/* Corner spin with rainbow effect */
+.corner-spin-rainbow::after,
+.corner-spin-rainbow::before {
+  background: conic-gradient(from var(--angle), transparent 70%, #ff4545, #00ff99, #006aff, #ff0095, transparent 100%);
+}
+
+/* Universal corner spinning utilities - can be applied to any element */
+.corner-border {
+  position: relative;
+  border-radius: var(--corner-radius, inherit);
+  z-index: 1;
+}
+
+.corner-border::after,
+.corner-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: var(--edge-width, 2px);
+  border-radius: var(--corner-radius, inherit);
+  background: conic-gradient(from var(--angle), transparent 70%, var(--corner-color, #00d4ff) 85%, transparent 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+  will-change: transform;
+  animation: corner-spin var(--spin-duration, 4s) linear infinite;
+}
+
+.corner-border::before {
+  filter: blur(0.5rem);
+  opacity: 0.4;
+  z-index: -2;
+}
+
+/* Universal color variants */
+.corner-blue {
+  --corner-color: #00d4ff;
+}
+
+.corner-cyan {
+  --corner-color: #00ffff;
+}
+
+.corner-green {
+  --corner-color: #00ff88;
+}
+
+.corner-purple {
+  --corner-color: #8a2be2;
+}
+
+.corner-red {
+  --corner-color: #ff4545;
+}
+
+.corner-orange {
+  --corner-color: #ff8c00;
+}
+
+.corner-yellow {
+  --corner-color: #ffd700;
+}
+
+.corner-pink {
+  --corner-color: #ff69b4;
+}
+
+/* Universal speed variants */
+.corner-fast {
+  --spin-duration: 2s;
+}
+
+.corner-normal {
+  --spin-duration: 4s;
+}
+
+.corner-slow {
+  --spin-duration: 6s;
+}
+
+.corner-very-slow {
+  --spin-duration: 8s;
+}
+
+/* Universal direction variants */
+.corner-reverse {
+  animation-direction: reverse;
+}
+
+/* Universal effect variants */
+.corner-glow::before {
+  filter: blur(1.5rem);
+  opacity: 0.8;
+}
+
+.corner-subtle::before {
+  filter: blur(0.5rem);
+  opacity: 0.3;
+}
+
+.corner-bold::before {
+  filter: blur(0.25rem);
+  opacity: 1;
+}
+
+.corner-sharp::before {
+  filter: none;
+  opacity: 1;
+}
+
+/* Universal size variants */
+.corner-thin {
+  --edge-width: 1px;
+}
+
+.corner-thick {
+  --edge-width: 3px;
+}
+
+.corner-extra-thick {
+  --edge-width: 5px;
+}
+
+/* Universal animation style variants */
+.corner-pulse {
+  animation: corner-pulse 2s ease-in-out infinite;
+}
+
+.corner-bounce {
+  animation: corner-bounce 1.5s ease-in-out infinite;
+}
+
+.corner-fade {
+  animation: corner-fade 3s ease-in-out infinite;
+}
+
+/* Additional keyframe animations */
+@keyframes corner-pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes corner-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes corner-fade {
+  0%, 100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Universal hover effects */
+.corner-hover:hover {
+  --corner-color: var(--corner-hover-color, #00ffff);
+  transition: --corner-color 0.3s ease;
+}
+
+/* Universal responsive variants */
+@media (max-width: 768px) {
+  .corner-mobile-subtle::before {
+    --edge-width: 1px;
+    filter: blur(0.5rem);
+    opacity: 0.4;
+  }
+  
+  .corner-mobile-hidden {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .corner-border,
+  .corner-spin {
+    animation: none;
   }
 }

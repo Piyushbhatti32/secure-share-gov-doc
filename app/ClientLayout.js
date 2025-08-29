@@ -1,14 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { useAuth } from '@clerk/nextjs';
 
 const publicPaths = [
   '/',
-  '/login',
-  '/register',
+  '/sign-in',
+  '/sign-up',
   '/help',
   '/contact',
   '/faq',
@@ -19,22 +18,22 @@ const publicPaths = [
 export default function ClientLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [loading, setLoading] = useState(true);
+  const { isSignedIn, isLoaded } = useAuth();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user && !publicPaths.includes(pathname)) {
-        router.push('/login');
-      } else if (user && publicPaths.includes(pathname)) {
-        router.push('/dashboard');
-      }
-      setLoading(false);
-    });
+    if (!isLoaded) return;
+    
+    // Check if current path is a public path or starts with sign-in/sign-up
+    const isPublicPath = publicPaths.includes(pathname) || 
+                        pathname.startsWith('/sign-in') || 
+                        pathname.startsWith('/sign-up');
+    
+    if (isSignedIn && isPublicPath) {
+      router.push('/dashboard');
+    }
+  }, [isLoaded, isSignedIn, pathname, router]);
 
-    return () => unsubscribe();
-  }, [pathname, router]);
-
-  if (loading) {
+  if (!isLoaded) {
     return <div>Loading...</div>;
   }
 

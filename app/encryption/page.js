@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase';
-import { getUserProfile, updateUser } from '@/lib/services/user-service';
-import { handleError } from '@/lib/utils/error-handler';
+import { useUser } from '@clerk/nextjs';
+import { getUserProfile, updateUserProfile } from '@/lib/services/user-service';
 import Navbar from '@/components/Navbar';
 
 export default function EncryptionPage() {
@@ -12,52 +11,56 @@ export default function EncryptionPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [encryptionSettings, setEncryptionSettings] = useState({
     defaultEncryption: false,
     encryptionStrength: 'AES-256',
-    autoEncryptSensitive: false
+    autoEncryptSensitive: false,
+    keyRotation: '30',
+    backupEncryption: true
   });
+  
   const router = useRouter();
+  const { user, isLoaded, isSignedIn } = useUser();
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+    const load = async () => {
+      if (!isLoaded) return;
+      if (!isSignedIn) {
+        router.push('/sign-in');
+        return;
+      }
+      
       try {
-        if (!user) {
-          router.push('/login');
-          return;
-        }
-
-        const userProfile = await getUserProfile(user.uid);
+        const userProfile = await getUserProfile(user.id);
         setProfile(userProfile);
-        if (userProfile.encryptionSettings) {
+        if (userProfile?.encryptionSettings) {
           setEncryptionSettings(userProfile.encryptionSettings);
         }
       } catch (err) {
-        const errorDetails = handleError(err);
-        setError(errorDetails.message);
+        console.error('Error loading profile:', err);
+        setError('Failed to load encryption settings');
       } finally {
         setLoading(false);
       }
-    });
-
-    return () => unsubscribe();
-  }, [router]);
+    };
+    load();
+  }, [router, isLoaded, isSignedIn, user]);
 
   const handleEncryptionSettingChange = async (key, value) => {
     try {
       setUpdating(true);
-      const userId = auth.currentUser?.uid;
-      if (!userId) {
-        router.push('/login');
-        return;
-      }
+      setError(null);
+      setSuccess(null);
+      
+      if (!user?.id) return;
 
       const updatedSettings = {
         ...encryptionSettings,
         [key]: value
       };
 
-      await updateUser(userId, {
+      await updateUserProfile(user.id, {
         encryptionSettings: updatedSettings
       });
 
@@ -66,9 +69,11 @@ export default function EncryptionPage() {
         ...prev,
         encryptionSettings: updatedSettings
       }));
+      
+      setSuccess('Encryption settings updated successfully!');
     } catch (err) {
-      const errorDetails = handleError(err);
-      setError(errorDetails.message);
+      console.error('Error updating encryption settings:', err);
+      setError('Failed to update encryption settings');
     } finally {
       setUpdating(false);
     }
@@ -76,207 +81,189 @@ export default function EncryptionPage() {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
-        <Navbar />
-        <div className="flex items-center justify-center h-[calc(100vh-180px)]">
-          <div className="text-center">
-            <i className="fas fa-circle-notch fa-spin text-4xl text-primary-600 mb-4"></i>
-            <p className="text-gray-600">Loading encryption settings...</p>
-          </div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-blue-200">Loading encryption settings...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
+    <div className="min-h-screen bg-black">
       <Navbar />
       
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Encryption Settings</h1>
-          <p className="text-gray-600 mt-2">Configure document encryption and security preferences</p>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white electric-text mb-2">
+            Encryption Settings
+          </h1>
+          <p className="text-blue-200">
+            Configure document encryption and security preferences
+          </p>
         </div>
 
+        {/* Messages */}
         {error && (
-          <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <div className="mb-6 bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg">
             {error}
           </div>
         )}
+        
+        {success && (
+          <div className="mb-6 bg-green-500/20 border border-green-500/30 text-green-300 px-4 py-3 rounded-lg">
+            {success}
+          </div>
+        )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Encryption Settings */}
+        <div className="space-y-6">
           {/* Default Encryption */}
-          <div className="card">
-            <div className="card-header">
-              <h2 className="text-xl font-semibold text-gray-900">Default Encryption</h2>
-              <p className="text-sm text-gray-500">Automatically encrypt new documents</p>
-            </div>
-            <div className="card-body">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900">Enable Default Encryption</h3>
-                  <p className="text-sm text-gray-500">
-                    All new documents will be encrypted by default
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={encryptionSettings.defaultEncryption}
-                    onChange={(e) => handleEncryptionSettingChange('defaultEncryption', e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
+          <div className="bg-black/40 backdrop-blur-sm rounded-xl border border-blue-500/30 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-white electric-text">
+                  Default Document Encryption
+                </h3>
+                <p className="text-blue-200 text-sm mt-1">
+                  Automatically encrypt all new documents by default
+                </p>
               </div>
-              
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-start">
-                  <i className="fas fa-info-circle text-blue-500 mt-0.5 mr-2"></i>
-                  <div className="text-sm text-blue-700">
-                    <p className="font-medium">How it works:</p>
-                    <p className="mt-1">
-                      When enabled, all new documents will be automatically encrypted using AES-256 encryption. 
-                      You can still choose to disable encryption for specific documents during upload.
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={encryptionSettings.defaultEncryption}
+                  onChange={(e) => handleEncryptionSettingChange('defaultEncryption', e.target.checked)}
+                  className="sr-only peer"
+                  disabled={updating}
+                />
+                <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50"></div>
+              </label>
             </div>
+            
+            {encryptionSettings.defaultEncryption && (
+              <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <p className="text-green-200 text-sm">
+                  All new documents will be automatically encrypted with your chosen encryption strength.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Encryption Strength */}
-          <div className="card">
-            <div className="card-header">
-              <h2 className="text-xl font-semibold text-gray-900">Encryption Strength</h2>
-              <p className="text-sm text-gray-500">Choose the encryption algorithm</p>
-            </div>
-            <div className="card-body">
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="encryptionStrength" className="block text-sm font-medium text-gray-700 mb-2">
-                    Encryption Algorithm
-                  </label>
-                  <select
-                    id="encryptionStrength"
-                    value={encryptionSettings.encryptionStrength}
-                    onChange={(e) => handleEncryptionSettingChange('encryptionStrength', e.target.value)}
-                    className="form-select"
-                  >
-                    <option value="AES-256">AES-256 (Recommended)</option>
-                    <option value="AES-192">AES-192</option>
-                    <option value="AES-128">AES-128</option>
-                  </select>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Higher bit strength provides better security but may impact performance
-                  </p>
-                </div>
-
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-start">
-                    <i className="fas fa-shield-alt text-green-500 mt-0.5 mr-2"></i>
-                    <div className="text-sm text-green-700">
-                      <p className="font-medium">AES-256 Encryption</p>
-                      <p className="mt-1">
-                        Military-grade encryption that provides excellent security for your sensitive documents.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div className="bg-black/40 backdrop-blur-sm rounded-xl border border-blue-500/30 p-6">
+            <h3 className="text-lg font-semibold text-white electric-text mb-4">
+              Encryption Algorithm Strength
+            </h3>
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-blue-200">
+                Select encryption algorithm
+              </label>
+              <select
+                value={encryptionSettings.encryptionStrength}
+                onChange={(e) => handleEncryptionSettingChange('encryptionStrength', e.target.value)}
+                disabled={updating}
+                className="w-full px-4 py-3 bg-black/60 border border-blue-500/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent electric-focus disabled:opacity-50"
+              >
+                <option value="AES-128">AES-128 (Fast, Good Security)</option>
+                <option value="AES-256">AES-256 (Recommended, High Security)</option>
+                <option value="ChaCha20">ChaCha20 (Fast, High Security)</option>
+              </select>
+              <p className="text-blue-300 text-sm">
+                Higher encryption strength provides better security but may impact performance.
+              </p>
             </div>
           </div>
 
-          {/* Auto-encrypt Sensitive Documents */}
-          <div className="card">
-            <div className="card-header">
-              <h2 className="text-xl font-semibold text-gray-900">Smart Encryption</h2>
-              <p className="text-sm text-gray-500">Automatically detect and encrypt sensitive content</p>
-            </div>
-            <div className="card-body">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900">Auto-encrypt Sensitive Documents</h3>
-                  <p className="text-sm text-gray-500">
-                    Automatically encrypt documents containing sensitive information
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={encryptionSettings.autoEncryptSensitive}
-                    onChange={(e) => handleEncryptionSettingChange('autoEncryptSensitive', e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
+          {/* Auto-encrypt Sensitive */}
+          <div className="bg-black/40 backdrop-blur-sm rounded-xl border border-blue-500/30 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-white electric-text">
+                  Auto-encrypt Sensitive Documents
+                </h3>
+                <p className="text-blue-200 text-sm mt-1">
+                  Automatically detect and encrypt documents containing sensitive information
+                </p>
               </div>
-              
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <div className="flex items-start">
-                  <i className="fas fa-exclamation-triangle text-yellow-500 mt-0.5 mr-2"></i>
-                  <div className="text-sm text-yellow-700">
-                    <p className="font-medium">Sensitive Content Detection:</p>
-                    <ul className="mt-1 list-disc list-inside">
-                      <li>Personal identification numbers</li>
-                      <li>Financial information</li>
-                      <li>Medical records</li>
-                      <li>Legal documents</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={encryptionSettings.autoEncryptSensitive}
+                  onChange={(e) => handleEncryptionSettingChange('autoEncryptSensitive', e.target.checked)}
+                  className="sr-only peer"
+                  disabled={updating}
+                />
+                <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50"></div>
+              </label>
             </div>
           </div>
 
-          {/* Encryption Summary */}
-          <div className="card">
-            <div className="card-header">
-              <h2 className="text-xl font-semibold text-gray-900">Encryption Summary</h2>
-              <p className="text-sm text-gray-500">Current encryption status</p>
+          {/* Key Rotation */}
+          <div className="bg-black/40 backdrop-blur-sm rounded-xl border border-blue-500/30 p-6">
+            <h3 className="text-lg font-semibold text-white electric-text mb-4">
+              Encryption Key Rotation
+            </h3>
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-blue-200">
+                Rotate encryption keys every
+              </label>
+              <select
+                value={encryptionSettings.keyRotation}
+                onChange={(e) => handleEncryptionSettingChange('keyRotation', e.target.value)}
+                disabled={updating}
+                className="w-full px-4 py-3 bg-black/60 border border-blue-500/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent electric-focus disabled:opacity-50"
+              >
+                <option value="30">30 days</option>
+                <option value="60">60 days</option>
+                <option value="90">90 days</option>
+                <option value="180">180 days</option>
+                <option value="365">1 year</option>
+                <option value="0">Never (Not recommended)</option>
+              </select>
+              <p className="text-blue-300 text-sm">
+                Regular key rotation enhances security by limiting the impact of potential key compromises.
+              </p>
             </div>
-            <div className="card-body">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Default encryption</span>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    encryptionSettings.defaultEncryption
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {encryptionSettings.defaultEncryption ? 'Enabled' : 'Disabled'}
-                  </span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Encryption algorithm</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {encryptionSettings.encryptionStrength}
-                  </span>
-                </div>
+          </div>
 
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Smart encryption</span>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    encryptionSettings.autoEncryptSensitive
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {encryptionSettings.autoEncryptSensitive ? 'Enabled' : 'Disabled'}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Encrypted documents</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {profile?.encryptedDocumentCount || 0}
-                  </span>
-                </div>
+          {/* Backup Encryption */}
+          <div className="bg-black/40 backdrop-blur-sm rounded-xl border border-blue-500/30 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-white electric-text">
+                  Encrypt Backups
+                </h3>
+                <p className="text-blue-200 text-sm mt-1">
+                  Encrypt all backup files and exports for additional security
+                </p>
               </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={encryptionSettings.backupEncryption}
+                  onChange={(e) => handleEncryptionSettingChange('backupEncryption', e.target.checked)}
+                  className="sr-only peer"
+                  disabled={updating}
+                />
+                <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50"></div>
+              </label>
             </div>
           </div>
         </div>
-      </main>
+
+        {/* Save Button */}
+        <div className="mt-8 flex justify-end">
+          <button
+            onClick={() => setSuccess('Settings saved automatically as you make changes!')}
+            disabled={updating}
+            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-medium rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl electric-glow disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {updating ? 'Updating...' : 'Save All Settings'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 } 

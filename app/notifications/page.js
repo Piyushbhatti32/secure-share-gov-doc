@@ -1,28 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase';
+import { useAuth } from '@clerk/nextjs';
 import Navbar from '@/components/Navbar';
 import NotificationCenter from '@/components/NotificationCenter';
 
 export default function NotificationsPage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const { userId, isLoaded } = useAuth();
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-      setUser(user);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [router]);
+    if (!isLoaded) return;
+    if (!userId) return; // Clerk middleware handles redirects
+    setUser({ uid: userId });
+    setLoading(false);
+  }, [isLoaded, userId]);
 
   if (loading) {
     return (
@@ -30,7 +23,7 @@ export default function NotificationsPage() {
         <Navbar />
         <div className="flex items-center justify-center h-[calc(100vh-180px)]">
           <div className="text-center">
-            <i className="fas fa-circle-notch fa-spin text-4xl text-primary-600 mb-4"></i>
+            <i className="fa-solid fa-circle-notch fa-spin text-4xl text-primary-600 mb-4"></i>
             <p className="text-gray-600">Loading notifications...</p>
           </div>
         </div>

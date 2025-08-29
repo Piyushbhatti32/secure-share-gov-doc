@@ -1,145 +1,235 @@
 'use client';
 
 import { useState } from 'react';
-import { encryptWithPassword, changeDocumentPassword, removePasswordProtection } from '@/lib/services/document-password-service';
 
-export default function DocumentPasswordManager({ documentId, userId, onSuccess, onCancel }) {
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [mode, setMode] = useState('add'); // 'add', 'change', or 'remove'
+export default function DocumentPasswordManager() {
+  const [passwords, setPasswords] = useState([
+    { id: 1, documentName: 'Aadhaar Card', password: 'Aadhaar@1234', isVisible: false },
+    { id: 2, documentName: 'PAN Card', password: 'Pan#7890', isVisible: false },
+    { id: 3, documentName: 'Driving License', password: 'DL@2025!', isVisible: false }
+  ]);
+  
+  const [newPassword, setNewPassword] = useState({
+    documentName: '',
+    password: '',
+    confirmPassword: ''
+  });
+  
+  const [showAddForm, setShowAddForm] = useState(false);
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(null);
 
-  const handleSubmit = async (e) => {
+  const togglePasswordVisibility = (id) => {
+    setPasswords(prev => prev.map(pwd => 
+      pwd.id === id ? { ...pwd, isVisible: !pwd.isVisible } : pwd
+    ));
+  };
+
+  const handleAddPassword = (e) => {
     e.preventDefault();
+    
+    if (!newPassword.documentName.trim()) {
+      setError('Please enter a document name');
+      return;
+    }
+    
+    if (!newPassword.password.trim()) {
+      setError('Please enter a password');
+      return;
+    }
+    
+    if (newPassword.password !== newPassword.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    
+    if (newPassword.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    const newPwd = {
+      id: Date.now(),
+      documentName: newPassword.documentName.trim(),
+      password: newPassword.password,
+      isVisible: false
+    };
+
+    setPasswords(prev => [...prev, newPwd]);
+    setNewPassword({ documentName: '', password: '', confirmPassword: '' });
+    setShowAddForm(false);
+    setSuccess('Password added successfully!');
     setError(null);
-    setLoading(true);
+  };
 
-    try {
-      if (mode === 'add') {
-        if (newPassword !== confirmPassword) {
-          throw new Error('Passwords do not match');
-        }
-        await encryptWithPassword(documentId, userId, newPassword);
-      } else if (mode === 'change') {
-        if (newPassword !== confirmPassword) {
-          throw new Error('New passwords do not match');
-        }
-        await changeDocumentPassword(documentId, userId, currentPassword, newPassword);
-      } else if (mode === 'remove') {
-        await removePasswordProtection(documentId, userId, currentPassword);
-      }
-
-      onSuccess?.();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+  const handleDeletePassword = (id) => {
+    if (window.confirm('Are you sure you want to delete this password?')) {
+      setPasswords(prev => prev.filter(pwd => pwd.id !== id));
+      setSuccess('Password deleted successfully!');
     }
   };
 
+  const handleEditPassword = (id, newPassword) => {
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    setPasswords(prev => prev.map(pwd => 
+      pwd.id === id ? { ...pwd, password: newPassword } : pwd
+    ));
+    setSuccess('Password updated successfully!');
+    setError(null);
+  };
+
   return (
-    <div className="bg-white shadow sm:rounded-lg">
-      <div className="px-4 py-5 sm:p-6">
-        <h3 className="text-lg leading-6 font-medium text-gray-900">
-          {mode === 'add' ? 'Add Password Protection' :
-           mode === 'change' ? 'Change Document Password' :
-           'Remove Password Protection'}
-        </h3>
-        <div className="mt-2 max-w-xl text-sm text-gray-500">
-          <p>
-            {mode === 'add' ? 'Add a password to protect this document. You\'ll need this password to access the document.' :
-             mode === 'change' ? 'Enter your current password and set a new one.' :
-             'Enter your current password to remove password protection.'}
+    <div className="bg-black/50 backdrop-blur-md rounded-2xl border border-blue-500/30 p-6 w-full shadow-2xl electric-border">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="text-lg font-semibold text-white electric-text flex items-center">
+            <i className="fa-solid fa-key text-blue-400 mr-2"></i>
+            Document Passwords
+          </h3>
+          <p className="text-blue-200 text-sm mt-1">
+            Manage passwords for your encrypted documents
           </p>
         </div>
+        <button
+          onClick={() => setShowAddForm(!showAddForm)}
+          className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-xl electric-glow"
+        >
+          {showAddForm ? 'Cancel' : 'Add Password'}
+        </button>
+      </div>
 
-        {error && (
-          <div className="mt-4 bg-red-50 border-l-4 border-red-400 p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-          {(mode === 'change' || mode === 'remove') && (
+      {/* Add Password Form */}
+      {showAddForm && (
+        <form onSubmit={handleAddPassword} className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
-                Current Password
+              <label htmlFor="documentName" className="block text-sm font-medium text-blue-200 mb-1">
+                Document Name
+              </label>
+              <input
+                type="text"
+                id="documentName"
+                value={newPassword.documentName}
+                onChange={(e) => setNewPassword(prev => ({ ...prev, documentName: e.target.value }))}
+                placeholder="e.g., Aadhaar Card"
+                className="w-full px-3 py-2 bg-black/60 border border-blue-500/30 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent electric-focus"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-blue-200 mb-1">
+                Password
               </label>
               <input
                 type="password"
-                id="currentPassword"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                required
+                id="password"
+                value={newPassword.password}
+                onChange={(e) => setNewPassword(prev => ({ ...prev, password: e.target.value }))}
+                placeholder="Enter password"
+                className="w-full px-3 py-2 bg-black/60 border border-blue-500/30 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent electric-focus"
               />
             </div>
-          )}
-
-          {(mode === 'add' || mode === 'change') && (
-            <>
-              <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
-                  {mode === 'add' ? 'Password' : 'New Password'}
-                </label>
-                <input
-                  type="password"
-                  id="newPassword"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                  Confirm Password
-                </label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  required
-                />
-              </div>
-            </>
-          )}
-
-          <div className="mt-5 flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Cancel
-            </button>
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-blue-200 mb-1">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                id="confirmPassword"
+                value={newPassword.confirmPassword}
+                onChange={(e) => setNewPassword(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                placeholder="Confirm password"
+                className="w-full px-3 py-2 bg-black/60 border border-blue-500/30 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent electric-focus"
+              />
+            </div>
+          </div>
+          <div className="mt-4 flex justify-end">
             <button
               type="submit"
-              disabled={loading}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+              className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-xl electric-glow"
             >
-              {loading ? 'Processing...' : 
-               mode === 'add' ? 'Add Password' :
-               mode === 'change' ? 'Change Password' :
-               'Remove Password'}
+              Add Password
             </button>
           </div>
         </form>
+      )}
+
+      {/* Passwords List */}
+      <div className="space-y-3">
+        {passwords.map((pwd) => (
+          <div key={pwd.id} className="flex items-center justify-between p-4 bg-black/20 border border-blue-500/20 rounded-xl hover:border-blue-400/40 transition-all duration-300">
+            <div className="flex items-center space-x-3 flex-1 min-w-0">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-600/30 to-cyan-600/30 border border-blue-500/30 flex items-center justify-center">
+                <i className="fa-solid fa-file-lines text-blue-300"></i>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-white font-medium truncate">{pwd.documentName}</h4>
+                <div className="flex items-center space-x-2 mt-1">
+                  <input
+                    type={pwd.isVisible ? 'text' : 'password'}
+                    value={pwd.password}
+                    onChange={(e) => handleEditPassword(pwd.id, e.target.value)}
+                    className="bg-transparent border-none text-blue-200 font-mono text-sm focus:outline-none"
+                    readOnly={!pwd.isVisible}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={() => togglePasswordVisibility(pwd.id)}
+                title={pwd.isVisible ? 'Hide' : 'Show'}
+                className="w-8 h-8 inline-flex items-center justify-center rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 hover:text-white transition-colors"
+              >
+                <i className={`fa-solid ${pwd.isVisible ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+              </button>
+              <button
+                type="button"
+                onClick={() => navigator.clipboard && navigator.clipboard.writeText(pwd.password)}
+                title="Copy"
+                className="w-8 h-8 inline-flex items-center justify-center rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 hover:text-white transition-colors"
+              >
+                <i className="fa-solid fa-copy"></i>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeletePassword(pwd.id)}
+                title="Delete"
+                className="w-8 h-8 inline-flex items-center justify-center rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-300 hover:text-white transition-colors"
+              >
+                <i className="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
+
+      {passwords.length === 0 && (
+        <div className="text-center py-8">
+          <svg className="w-16 h-16 text-blue-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <p className="text-blue-200">No passwords stored yet</p>
+          <p className="text-blue-300 text-sm">Add your first document password to get started</p>
+        </div>
+      )}
+
+      {/* Messages */}
+      {error && (
+        <div className="mt-4 bg-red-900/40 border border-red-500/40 text-red-200 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
+      
+      {success && (
+        <div className="mt-4 bg-green-900/40 border border-green-500/40 text-green-200 px-4 py-3 rounded-lg">
+          {success}
+        </div>
+      )}
     </div>
   );
 }

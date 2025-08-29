@@ -1,39 +1,32 @@
-import { Inter, JetBrains_Mono } from "next/font/google";
-import { metadata } from './metadata';
-import ClientLayout from './ClientLayout';
-import Script from 'next/script';
+import { Inter } from "next/font/google";
 import "./globals.css";
+import ClerkProviderWrapper from "@/components/ClerkProviderWrapper";
 
 const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
   variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
 });
 
-const jetBrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-export { metadata };
+export const metadata = {
+  title: "SecureShare - Government Document Sharing",
+  description: "Securely share government documents with family members",
+};
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-        <link 
-          rel="stylesheet" 
+        <link
+          rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
-          crossOrigin="anonymous"
-          referrerPolicy="no-referrer"
         />
       </head>
-      <body className={`${inter.variable} ${jetBrainsMono.variable} antialiased`}>
-        <ClientLayout>{children}</ClientLayout>
+      <body className={`${inter.variable} font-sans antialiased`}>
+        <ClerkProviderWrapper>
+          {children}
+        </ClerkProviderWrapper>
       </body>
     </html>
   );
-}
+} 

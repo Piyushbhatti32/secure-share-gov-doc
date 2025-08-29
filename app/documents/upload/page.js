@@ -1,436 +1,353 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { collection, addDoc } from 'firebase/firestore';
-import { db, auth } from '@/lib/firebase';
-import { validateFileType, validateFileSize } from '@/lib/utils/form-validator';
-import { handleError } from '@/lib/utils/error-handler';
-import { logActivity, ActivityType } from '@/lib/services/activity-service';
-import { uploadFileToDrive } from '@/lib/services/google-drive-service';
-import { 
-  checkGoogleDriveConnection, 
-  setGoogleDriveConnected,
-  refreshGoogleDriveConnection 
-} from '@/lib/services/google-drive-connection-service';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
+import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import EnhancedFileUpload from '@/components/EnhancedFileUpload';
+import mockDataService from '@/lib/services/mock-data-service';
 
-export default function UploadPage() {
-  const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadStatus, setUploadStatus] = useState('');
-  const [isGoogleConnected, setIsGoogleConnected] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    type: 'other',
-    description: ''
-  });
+export default function DocumentUploadPage() {
+  const { user, isLoaded, isSignedIn } = useUser();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    type: '',
+    tags: ''
+  });
+  
+  const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
-  // Check Google Drive connection status
   useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        console.log('Checking Google Drive connection...');
-        const connectionStatus = await checkGoogleDriveConnection();
-        console.log('Connection status:', connectionStatus);
-        
-        if (connectionStatus.connected) {
-          setIsGoogleConnected(true);
-          setError(null);
-        } else if (connectionStatus.needsRefresh) {
-          // Try to refresh the connection automatically
-          try {
-            console.log('Attempting to refresh connection...');
-            await refreshGoogleDriveConnection();
-            setIsGoogleConnected(true);
-            setError(null);
-          } catch (refreshError) {
-            console.error('Refresh failed:', refreshError);
-            setIsGoogleConnected(false);
-            setError('Google Drive connection expired. Please reconnect.');
-          }
-        } else {
-          setIsGoogleConnected(false);
-          if (connectionStatus.error) {
-            console.error('Connection error:', connectionStatus.error);
-            setError(connectionStatus.error);
-          }
-        }
-      } catch (error) {
-        console.error('Error checking Google Drive connection:', error);
-        setIsGoogleConnected(false);
-        setError('Failed to check Google Drive connection');
-      }
-    };
+    if (!isLoaded) return;
 
-    // Check connection status on page load
-    checkConnection();
-
-    // Also handle URL parameters for new connections
-    const connected = searchParams.get('connected');
-    const setup = searchParams.get('setup');
-    const error = searchParams.get('error');
-
-    if (connected === 'true') {
-      setIsGoogleConnected(true);
-      setError(null);
-      
-      // If this is a new setup, save the connection status
-      if (setup === 'true') {
-        setGoogleDriveConnected(true);
-      }
-    } else if (error) {
-      setError(decodeURIComponent(error));
+    if (!isSignedIn) {
+      router.push('/sign-in');
+      return;
     }
-  }, [searchParams]);
+  }, [isLoaded, isSignedIn, router]);
 
-  const connectToGoogle = async () => {
-    try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        setError('You must be logged in to connect to Google Drive');
-        return;
-      }
-      
-      // Get the Google OAuth URL from the backend
-      const response = await fetch(`/api/auth/google?userId=${currentUser.uid}`);
-      const data = await response.json();
-      
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        setError('Failed to get Google authentication URL');
-      }
-    } catch (error) {
-      console.error('Error connecting to Google:', error);
-      setError('Failed to initiate Google Drive connection');
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleFileSelect = (selectedFile) => {
+    setFile(selectedFile);
+    setError(null);
+    
+    // Auto-fill title if empty
+    if (!formData.title.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        title: selectedFile.name.split('.').slice(0, -1).join('.')
+      }));
     }
   };
 
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      try {
-        validateFileType(selectedFile);
-        validateFileSize(selectedFile);
-        setFile(selectedFile);
-        setError(null);
-
-        // Create preview URL
-        const previewUrl = URL.createObjectURL(selectedFile);
-        setPreview(previewUrl);
-        
-        // Auto-fill name if empty
-        if (!formData.name) {
-          setFormData(prev => ({
-            ...prev,
-            name: selectedFile.name.replace(/\.[^/.]+$/, '')
-          }));
-        }
-      } catch (err) {
-        setError(err.message);
-        setFile(null);
-        setPreview(null);
-      }
-    }
+  const handleFileRemove = () => {
+    setFile(null);
+    setError(null);
   };
 
+  const simulateUploadProgress = () => {
+    setUploadProgress(0);
+    const interval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + Math.random() * 15;
+      });
+    }, 200);
+    return interval;
+  };
 
-
-  const handleUpload = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (!file) {
       setError('Please select a file to upload');
       return;
     }
 
-    if (!isGoogleConnected) {
-      setError('Please connect your Google Drive account first');
+    if (!formData.title.trim()) {
+      setError('Please enter a document title');
       return;
     }
 
-    setLoading(true);
-    setError(null);
-    
-    // Get the current user
-    const currentUser = auth.currentUser;
+    if (!formData.type) {
+      setError('Please select a document type');
+      return;
+    }
 
     try {
-      setUploadStatus('Preparing upload...');
-      
-      // Upload to Google Drive
-      const driveResponse = await uploadFileToDrive(file);
-      
-      setUploadStatus('File uploaded successfully');
+      setUploading(true);
+      setError(null);
+      setSuccess(null);
+      setUploadProgress(0);
 
-      setUploadStatus('Saving document information...');
-      const { viewLink: downloadURL, fileId } = driveResponse;
+      // Simulate upload progress
+      const progressInterval = simulateUploadProgress();
 
-      // Prepare document metadata
+      // Create FormData for file upload
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', file);
+      uploadFormData.append('title', formData.title.trim());
+      uploadFormData.append('description', formData.description.trim());
+      uploadFormData.append('type', formData.type);
+      uploadFormData.append('tags', formData.tags);
+
+      // Upload file to R2 via API
+      const uploadResponse = await fetch('/api/upload', {
+        method: 'POST',
+        body: uploadFormData,
+      });
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
+
+      const uploadResult = await uploadResponse.json();
+
+      // Create document data with R2 file info
       const documentData = {
-        name: formData.name || file.name.replace(/\.[^/.]+$/, ''),
-        type: formData.type || 'other',
-        description: formData.description || '',
-        fileType: file.type,
-        size: file.size,
-        url: downloadURL,
-        createdAt: new Date(),
-        userId: auth.currentUser.uid,
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        type: formData.type,
+        tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+        fileName: uploadResult.file.fileName,
+        originalFileName: uploadResult.file.originalName,
+        fileSize: uploadResult.file.size,
+        fileType: uploadResult.file.type,
         status: 'active',
-        uploadedAt: new Date(),
-        lastModified: new Date(),
-        lastAccessed: new Date(),
-        downloads: 0,
-        sharedCount: 0,
-        isShared: false
+        r2Storage: true,
+        uploadedAt: uploadResult.file.uploadedAt
       };
 
-      // Add document metadata to Firestore
-      await addDoc(collection(db, 'documents'), documentData);
+      // Add document to mock service
+      const newDocument = await mockDataService.addDocument(documentData);
 
-      router.push('/documents');
+      if (newDocument) {
+        setSuccess('Document uploaded successfully to secure cloud storage!');
+        
+        // Reset form
+        setFormData({
+          title: '',
+          description: '',
+          type: '',
+          tags: ''
+        });
+        setFile(null);
+        
+        // Redirect to documents page after a short delay
+        setTimeout(() => {
+          router.push('/documents');
+        }, 3000);
+      } else {
+        setError('Failed to save document metadata');
+      }
     } catch (err) {
-      const errorDetails = handleError(err);
-      setError(errorDetails.message);
+      console.error('Error uploading document:', err);
+      setError(`Failed to upload document: ${err.message}`);
     } finally {
-      setLoading(false);
+      setUploading(false);
+      setUploadProgress(0);
     }
   };
 
   return (
-    <div className="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
+    <div className="min-h-screen bg-black">
       <Navbar />
       
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="card">
-          <div className="card-header">
-            <h1 className="text-2xl font-bold text-gray-900">Upload Document</h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Upload your government documents securely
-            </p>
-          </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white electric-text mb-2">
+            Upload Document
+          </h1>
+          <p className="text-blue-200">
+            Upload and organize your important documents securely
+          </p>
+        </div>
 
-          <div className="card-body">
-            {!isGoogleConnected && (
-              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <i className="fab fa-google text-blue-400"></i>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-blue-700">
-                      Sign in with Google to automatically connect your Google Drive account and upload documents securely.
-                    </p>
-                    <div className="mt-3">
-                      <button
-                        type="button"
-                        onClick={connectToGoogle}
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      >
-                        <i className="fab fa-google mr-2"></i>
-                        Sign in with Google
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {isGoogleConnected && (
-              <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-6">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <i className="fas fa-check-circle text-green-400"></i>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-green-700">
-                      Google Drive is connected and ready for secure document uploads.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleUpload} id="uploadForm" className="space-y-6">
-            <div className="w-full">
-              <label className="form-label" htmlFor="file">
-                Document File (PDF only)
+        {/* Upload Form */}
+        <div className="bg-black/40 backdrop-blur-sm rounded-xl border border-blue-500/30 p-8 corner-border corner-blue corner-normal radius-xl">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Enhanced File Upload */}
+            <div>
+              <label className="block text-sm font-medium text-blue-200 mb-2">
+                Select File
               </label>
-              <div 
-                className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-primary-500 transition-colors duration-200"
-                onDrop={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const droppedFile = e.dataTransfer.files[0];
-                  if (droppedFile) {
-                    handleFileChange({ target: { files: [droppedFile] } });
-                  }
-                }}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  e.currentTarget.classList.add('border-primary-500');
-                }}
-                onDragLeave={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  e.currentTarget.classList.remove('border-primary-500');
-                }}
-              >
-                <div className="space-y-1 text-center">
-                  {preview ? (
-                    <div className="flex flex-col items-center">
-                      <embed
-                        src={preview}
-                        type="application/pdf"
-                        className="w-full h-48 mb-4 rounded border border-gray-200"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFile(null);
-                          setPreview(null);
-                        }}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        Remove File
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <i className="fas fa-cloud-upload-alt text-4xl text-gray-400"></i>
-                      <div className="flex text-sm text-gray-600">
-                        <label
-                          htmlFor="file"
-                          className="relative cursor-pointer rounded-md font-medium text-primary-600 hover:text-primary-700"
-                        >
-                          <span>Click to upload</span>
-                          <input
-                            id="file"
-                            name="file"
-                            type="file"
-                            accept=".pdf"
-                            className="sr-only"
-                            onChange={handleFileChange}
-                          />
-                        </label>
-                        <p className="pl-1">or drag and drop</p>
-                      </div>
-                      <p className="text-xs text-gray-500">
-                        PDF up to 10MB
-                      </p>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Document Details */}
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="name" className="form-label">
-                  Document Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  required
-                  className="form-input"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="type" className="form-label">
-                  Document Type
-                </label>
-                <select
-                  id="type"
-                  required
-                  className="form-input"
-                  value={formData.type}
-                  onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
-                >
-                  <option value="aadhar">Aadhar Card</option>
-                  <option value="pan">PAN Card</option>
-                  <option value="passport">Passport</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              <div>
-                <label htmlFor="description" className="form-label">
-                  Description (Optional)
-                </label>
-                <textarea
-                  id="description"
-                  rows="3"
-                  className="form-input"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                ></textarea>
-              </div>
-            </div>
-            </form>
-
-            <div className="card-footer flex items-center justify-between mt-6">
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="btn btn-outline"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                form="uploadForm"
-                disabled={loading || !file || !isGoogleConnected}
-                className="btn btn-primary"
-              >
-                {loading ? (
-                  <>
-                    <i className="fas fa-circle-notch fa-spin mr-2"></i>
-                    {uploadStatus}
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-upload mr-2"></i>
-                    Upload Document
-                  </>
-                )}
-              </button>
+              <EnhancedFileUpload
+                onFileSelect={handleFileSelect}
+                onFileRemove={handleFileRemove}
+                acceptedTypes=".pdf,.jpg,.jpeg,.png,.gif,.webp,.txt,.csv,.html,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z"
+                maxSize={50 * 1024 * 1024} // 50MB
+                disabled={uploading}
+              />
             </div>
 
             {/* Upload Progress */}
-            {loading && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">{uploadStatus}</span>
-                  <span className="text-sm font-medium text-gray-700">{Math.round(uploadProgress)}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div 
-                    className="bg-primary-600 h-2.5 rounded-full transition-all duration-300" 
-                    style={{ width: `${uploadProgress}%` }}
-                  ></div>
+            {uploading && uploadProgress > 0 && (
+              <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg corner-border corner-cyan corner-fast radius-lg">
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm text-blue-200">
+                    <span>Uploading to secure cloud storage...</span>
+                    <span>{Math.round(uploadProgress)}%</span>
+                  </div>
+                  <div className="w-full bg-blue-500/20 rounded-full h-3">
+                    <div 
+                      className="bg-gradient-to-r from-blue-500 to-cyan-500 h-3 rounded-full transition-all duration-300 corner-border corner-cyan corner-fast"
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                  <div className="text-xs text-blue-300 text-center">
+                    {uploadProgress < 100 ? 'Encrypting and uploading...' : 'Finalizing upload...'}
+                  </div>
                 </div>
               </div>
             )}
-          </div>
+
+            {/* Document Title */}
+            <div>
+              <label htmlFor="title" className="block text-sm font-medium text-blue-200 mb-2">
+                Document Title *
+              </label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 bg-black/60 border border-blue-500/30 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent electric-focus corner-border corner-cyan corner-subtle radius-lg"
+                placeholder="Enter document title"
+              />
+            </div>
+
+            {/* Description */}
+            <div>
+              <label htmlFor="description" className="block text-sm font-medium text-blue-200 mb-2">
+                Description
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                rows={3}
+                className="w-full px-4 py-3 bg-black/60 border border-blue-500/30 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent electric-focus corner-border corner-purple corner-subtle radius-lg"
+                placeholder="Enter document description (optional)"
+              />
+            </div>
+
+            {/* Document Type */}
+            <div>
+              <label htmlFor="type" className="block text-sm font-medium text-blue-200 mb-2">
+                Document Type *
+              </label>
+              <select
+                id="type"
+                name="type"
+                value={formData.type}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 bg-black/60 border border-blue-500/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent electric-focus corner-border corner-green corner-subtle radius-lg"
+              >
+                <option value="">Select document type</option>
+                <option value="government">Government Document</option>
+                <option value="personal">Personal Document</option>
+                <option value="financial">Financial Document</option>
+                <option value="legal">Legal Document</option>
+                <option value="medical">Medical Document</option>
+                <option value="educational">Educational Document</option>
+                <option value="business">Business Document</option>
+                <option value="creative">Creative Work</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            {/* Tags */}
+            <div>
+              <label htmlFor="tags" className="block text-sm font-medium text-blue-200 mb-2">
+                Tags (comma-separated)
+              </label>
+              <input
+                type="text"
+                id="tags"
+                name="tags"
+                value={formData.tags}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 bg-black/60 border border-blue-500/30 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent electric-focus corner-border corner-orange corner-subtle radius-lg"
+                placeholder="e.g., important, government, identity, urgent"
+              />
+            </div>
+
+            {/* Messages */}
+            {error && (
+              <div className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg corner-border corner-red corner-pulse radius-lg">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {error}
+                </div>
+              </div>
+            )}
+            
+            {success && (
+              <div className="bg-green-500/20 border border-green-500/30 text-green-300 px-4 py-3 rounded-lg corner-border corner-green corner-glow radius-lg">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {success}
+                </div>
+              </div>
+            )}
+
+            {/* Form Actions */}
+            <div className="flex items-center justify-end space-x-4 pt-6">
+              <Link
+                href="/documents"
+                className="px-6 py-3 border border-blue-500/50 text-blue-300 hover:text-blue-200 hover:border-blue-400 rounded-lg font-medium transition-all duration-300 corner-border corner-blue corner-subtle radius-lg"
+              >
+                Cancel
+              </Link>
+              <button
+                type="submit"
+                disabled={uploading || !file}
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-medium rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl electric-glow disabled:opacity-50 disabled:cursor-not-allowed corner-border corner-cyan corner-fast radius-lg"
+              >
+                {uploading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Uploading...
+                  </div>
+                ) : (
+                  'Upload Document'
+                )}
+              </button>
+            </div>
+          </form>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

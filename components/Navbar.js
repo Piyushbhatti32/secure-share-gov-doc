@@ -1,174 +1,147 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { auth } from "@/lib/firebase";
-import Image from 'next/image';
-import GoogleDriveStatus from './GoogleDriveStatus';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome, faFolder, faBell, faUser, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
-import { handleLogout as handleLogoutActivity } from '@/lib/services/auth-service';
+import Link from 'next/link';
+import { useUser } from '@clerk/nextjs';
+import { SignedIn, SignedOut, UserButton, SignInButton, SignUpButton } from '@clerk/nextjs';
+import { useState } from 'react';
 
 export default function Navbar() {
+  const { user, isLoaded, isSignedIn } = useUser();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  let pathname = "/";
-  try {
-    const maybeUsePathname = usePathname;
-    pathname =
-      typeof maybeUsePathname === "function" ? maybeUsePathname() : "/";
-  } catch (e) {
-    pathname = "/";
+
+  if (!isLoaded) {
+    return (
+      <nav className="bg-black/80 backdrop-blur-sm border-b border-blue-500/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="w-32 h-8 bg-blue-500/20 rounded animate-pulse"></div>
+            <div className="w-32 h-8 bg-blue-500/20 rounded animate-pulse"></div>
+          </div>
+        </div>
+      </nav>
+    );
   }
-  const router = useRouter();
-
-  const isActive = (path) => pathname === path;
-
-  const handleLogout = async () => {
-    try {
-      const currentUser = auth.currentUser;
-      await auth.signOut();
-      if (currentUser) {
-        await handleLogoutActivity(currentUser);
-      }
-      router.push("/login");
-    } catch (error) {
-      console.error("Error logging out:", error);
-    }
-  };
 
   return (
-    <nav className="gov-header">
-      <div className="bg-slate-800 text-white py-2 px-4 text-center text-sm">
-        Government of India | Digital Document Management Portal
-      </div>
+    <nav className="bg-black/80 backdrop-blur-sm border-b border-blue-500/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between py-4">
-          {/* Logo Section */}
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <div className="flex items-center">
+            <Link href="/dashboard" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <span className="text-xl font-bold text-white electric-text">SecureDocShare</span>
+            </Link>
+          </div>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
+            {isSignedIn && (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="text-blue-200 hover:text-white transition-colors duration-300"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/documents"
+                  className="text-blue-200 hover:text-white transition-colors duration-300"
+                >
+                  Documents
+                </Link>
+                <Link
+                  href="/shared"
+                  className="text-blue-200 hover:text-white transition-colors duration-300"
+                >
+                  Shared
+                </Link>
+                <Link
+                  href="/security"
+                  className="text-blue-200 hover:text-white transition-colors duration-300"
+                >
+                  Security
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* User Menu */}
           <div className="flex items-center space-x-4">
-            <div className="emblem relative w-[50px] h-[50px]">
-              <Image
-                src="/icon.svg"
-                alt="SecureDocShare Logo"
-                width={50}
-                height={50}
-                priority
-                className="object-contain"
-              />
-            </div>
-            <div>
-              <Link href="/dashboard" className="hover:opacity-75">
-                <h1 className="text-xl font-bold text-gray-900">
-                  SecureDocShare
-                </h1>
-                <p className="text-sm text-gray-600">
-                  Digital Document Management
-                </p>
-              </Link>
-            </div>
+            <SignedIn>
+              <UserButton afterSignOutUrl="/" appearance={{
+                elements: {
+                  userButtonAvatarBox: 'w-8 h-8',
+                  userButtonTrigger: 'text-blue-200 hover:text-white',
+                }
+              }} />
+            </SignedIn>
+            <SignedOut>
+              <div className="flex items-center space-x-4">
+                <SignInButton mode="redirect" redirectUrl="/dashboard">
+                  <button className="text-blue-200 hover:text-white transition-colors duration-300">Sign In</button>
+                </SignInButton>
+                <SignUpButton mode="redirect" redirectUrl="/dashboard">
+                  <button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-xl electric-glow">Sign Up</button>
+                </SignUpButton>
+              </div>
+            </SignedOut>
           </div>
 
-          {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center space-x-6">
-            <Link
-              href="/dashboard"
-              className={`nav-link ${isActive("/dashboard") ? "active" : ""}`}
-            >
-              <FontAwesomeIcon icon={faHome} className="mr-2" />
-              Dashboard
-            </Link>
-            <Link
-              href="/documents"
-              className={`nav-link ${isActive("/documents") ? "active" : ""}`}
-            >
-              <FontAwesomeIcon icon={faFolder} className="mr-2" />
-              My Documents
-            </Link>
-            {/* Icons only for notifications, drive, profile */}
-            <Link
-              href="/notifications"
-              className={`nav-link p-2 rounded-full hover:bg-gray-100 ${isActive("/notifications") ? "bg-gray-200" : ""}`}
-              title="Notifications"
-            >
-              <FontAwesomeIcon icon={faBell} className="text-lg" />
-            </Link>
-            <div title="Google Drive Status">
-              <GoogleDriveStatus />
-            </div>
-            <Link
-              href="/profile"
-              className={`nav-link p-2 rounded-full hover:bg-gray-100 ${isActive("/profile") ? "bg-gray-200" : ""}`}
-              title="Profile"
-            >
-              <FontAwesomeIcon icon={faUser} className="text-lg" />
-            </Link>
-            <button onClick={handleLogout} className="btn btn-outline ml-2" title="Logout">
-              <FontAwesomeIcon icon={faSignOutAlt} />
-            </button>
-          </div>
-
-          {/* Mobile Menu Button */}
+          {/* Mobile menu button */}
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-700 hover:text-primary-600"
+              className="text-blue-200 hover:text-white transition-colors duration-300"
             >
-              <FontAwesomeIcon icon={isMenuOpen ? faSignOutAlt : faHome} className="text-xl" />
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-200 py-2">
-            <Link
-              href="/dashboard"
-              className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 ${
-                isActive("/dashboard") ? "font-bold" : ""
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/documents"
-              className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 ${
-                isActive("/documents") ? "font-bold" : ""
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Documents
-            </Link>
-            <Link
-              href="/notifications"
-              className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 ${
-                isActive("/notifications") ? "font-bold" : ""
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Notifications
-            </Link>
-            <Link
-              href="/profile"
-              className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 ${
-                isActive("/profile") ? "font-bold" : ""
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Profile
-            </Link>
-            <div className="px-4 py-2 border-t border-gray-200">
-              <GoogleDriveStatus />
+          <div className="md:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1 bg-black/90 backdrop-blur-sm border-t border-blue-500/30">
+              {isSignedIn && (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="block px-3 py-2 text-blue-200 hover:text-white hover:bg-blue-500/20 rounded-md transition-colors duration-300"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/documents"
+                    className="block px-3 py-2 text-blue-200 hover:text-white hover:bg-blue-500/20 rounded-md transition-colors duration-300"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Documents
+                  </Link>
+                  <Link
+                    href="/shared"
+                    className="block px-3 py-2 text-blue-200 hover:text-white hover:bg-blue-500/20 rounded-md transition-colors duration-300"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Shared
+                  </Link>
+                  <Link
+                    href="/security"
+                    className="block px-3 py-2 text-blue-200 hover:text-white hover:bg-blue-500/20 rounded-md transition-colors duration-300"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Security
+                  </Link>
+                </>
+              )}
             </div>
-            <button
-              onClick={() => {
-                handleLogout();
-                setIsMenuOpen(false);
-              }}
-              className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-            >
-              Logout
-            </button>
           </div>
         )}
       </div>

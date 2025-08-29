@@ -1,143 +1,88 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { getDocument } from '@/lib/services/document-service';
-import { getDocumentShares, shareDocument } from '@/lib/services/share-service';
-import { handleError } from '@/lib/utils/error-handler';
-import { validateEmail } from '@/lib/utils/form-validator';
-import { auth } from '@/lib/firebase';
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
+import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import { use } from 'react';
+import mockDataService from '@/lib/services/mock-data-service';
+import { formatDate } from '@/lib/utils/date-utils';
+import PDFViewer from '@/components/PDFViewer';
 
-export default function DocumentPage({ params }) {
-  const documentId = use(params).id;
+export default function DocumentViewPage() {
+  const { user, isLoaded, isSignedIn } = useUser();
   const router = useRouter();
+  const params = useParams();
+  const documentId = params.id;
+  
   const [document, setDocument] = useState(null);
-  const [shares, setShares] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [shareEmail, setShareEmail] = useState('');
-  const [sharing, setSharing] = useState(false);
-  const mounted = useRef(false);
 
   useEffect(() => {
-  const fetchData = async () => {
-      try {
-        // If firebase `auth` is available and there is no current user, redirect to login.
-        // If `auth` is undefined (e.g. in some test environments), continue so tests can mock
-        // document fetching.
-        if (auth && !auth.currentUser) {
-          router.push('/login');
-          return;
-        }
+    if (!isLoaded) return;
 
-        if (!documentId) {
-          setError('Invalid document ID');
-          setLoading(false);
-          return;
-        }
+    if (!isSignedIn) {
+      router.push('/sign-in');
+      return;
+    }
 
-        // Fetch document and shares in parallel
-        const [doc, sharesList] = await Promise.all([
-          getDocument(documentId),
-          getDocumentShares(documentId)
-        ]);
+    fetchDocument();
+  }, [isLoaded, isSignedIn, router, documentId]);
 
-        if (mounted.current) {
-          setDocument(doc);
-          setShares(sharesList);
-        }
-  } catch (err) {
-        const errorDetails = handleError(err);
-        
-        // Handle specific errors
-  if (!mounted.current) return;
-
-        if (errorDetails.message === 'Access denied') {
-          setError('You do not have permission to view this document');
-        } else if (errorDetails.message === 'Document not found') {
-          setError('The document you are looking for does not exist');
-        } else if (errorDetails.message === 'Authentication required') {
-          router.push('/login');
-          return;
-        } else {
-          setError(errorDetails.message);
-        }
-      } finally {
-        if (mounted.current) setLoading(false);
-      }
-    };
-
-    fetchData();
-
-    // mark mounted
-    mounted.current = true;
-
-    return () => {
-      mounted.current = false;
-    };
-  }, [documentId, router]);
-
-  const handleShare = async (e) => {
-    e.preventDefault();
-    setError(null);
-    setSharing(true);
-
+  const fetchDocument = async () => {
     try {
-      validateEmail(shareEmail);
-      await shareDocument(
-        documentId,
-        auth?.currentUser?.uid,
-        shareEmail,
-        ['view']
-      );
-      
-      // Refresh shares list
-      const sharesList = await getDocumentShares(documentId);
-      if (mounted.current) {
-        setShares(sharesList);
-        setShareEmail('');
+      setLoading(true);
+      const doc = await mockDataService.getDocument(documentId);
+      if (doc) {
+        setDocument(doc);
+      } else {
+        setError('Document not found');
       }
     } catch (err) {
-      const errorDetails = handleError(err);
-      setError(errorDetails.message);
+      console.error('Error fetching document:', err);
+      setError('Failed to load document');
     } finally {
-      setSharing(false);
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
+      try {
+        await mockDataService.deleteDocument(documentId);
+        router.push('/documents');
+      } catch (err) {
+        console.error('Error deleting document:', err);
+        setError('Failed to delete document');
+      }
     }
   };
 
   if (loading) {
     return (
-      <div>
-        <Navbar />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          Loading...
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-blue-200">Loading document...</p>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (error || !document) {
     return (
-      <div>
+      <div className="min-h-screen bg-black">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            {error}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!document) {
-    return (
-      <div>
-        <Navbar />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white shadow overflow-hidden sm:rounded-lg p-6">
-            <p className="text-gray-700">Document data is not available.</p>
+          <div className="text-center">
+            <p className="text-red-400 mb-4">{error || 'Document not found'}</p>
+            <button 
+              onClick={() => router.push('/documents')}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+            >
+              Back to Documents
+            </button>
           </div>
         </div>
       </div>
@@ -145,93 +90,149 @@ export default function DocumentPage({ params }) {
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-black">
       <Navbar />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-          <div className="px-4 py-5 sm:px-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
-              {document.name}
-            </h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              Uploaded on {document.createdAt ? new Date(document.createdAt).toLocaleDateString() : 'N/A'}
+      
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-white electric-text mb-2">
+              {document.title}
+            </h1>
+            <p className="text-blue-200">
+              {document.description}
             </p>
           </div>
+          <div className="flex space-x-3">
+            <Link
+              href={`/documents/${documentId}/edit`}
+              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition-colors duration-300"
+            >
+              Edit
+            </Link>
+            <button
+              onClick={handleDelete}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors duration-300"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
 
-          <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
-            <div className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
-              <div className="sm:col-span-1">
-                <dt className="text-sm font-medium text-gray-500">File Type</dt>
-                <dd className="mt-1 text-sm text-gray-900">{document.type}</dd>
+        {/* Document Details */}
+        <div className="bg-black/40 backdrop-blur-sm rounded-xl border border-blue-500/30 p-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-white electric-text mb-4">
+                Document Information
+              </h3>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-blue-200">Type:</span>
+                  <span className="text-white capitalize">{document.type}</span>
+                </div>
+                
+                <div className="flex justify-between">
+                  <span className="text-blue-200">Status:</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    document.status === 'active' 
+                      ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                      : document.status === 'archived'
+                      ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
+                      : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                  }`}>
+                    {document.status.charAt(0).toUpperCase() + document.status.slice(1)}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between">
+                  <span className="text-blue-200">Size:</span>
+                  <span className="text-white">{document.size}</span>
+                </div>
+                
+                <div className="flex justify-between">
+                  <span className="text-blue-200">Created:</span>
+                  <span className="text-white">{formatDate(document.createdAt, 'datetime')}</span>
+                </div>
+                
+                <div className="flex justify-between">
+                  <span className="text-blue-200">Last Updated:</span>
+                  <span className="text-white">{formatDate(document.updatedAt, 'datetime')}</span>
+                </div>
               </div>
-              <div className="sm:col-span-1">
-                <dt className="text-sm font-medium text-gray-500">Size</dt>
-                <dd className="mt-1 text-sm text-gray-900">
-                  {Math.round(document.size / 1024)} KB
-                </dd>
+            </div>
+
+            {/* Tags and Actions */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-white electric-text mb-4">
+                Tags & Categories
+              </h3>
+              
+              <div className="space-y-3">
+                <div>
+                  <span className="text-blue-200">Tags:</span>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {document.tags && document.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm border border-blue-500/30"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="pt-4">
+                  <h4 className="text-md font-medium text-white mb-3">Quick Actions</h4>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => window.open('#', '_blank')}
+                      className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors duration-300"
+                    >
+                      Download Document
+                    </button>
+                    <button
+                      onClick={() => window.open('#', '_blank')}
+                      className="w-full px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors duration-300"
+                    >
+                      Share Document
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+        </div>
 
-          <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
-            <h4 className="text-lg font-medium text-gray-900 mb-4">Share Document</h4>
-            <form onSubmit={handleShare} className="flex gap-4">
-              <input
-                type="email"
-                value={shareEmail}
-                onChange={(e) => setShareEmail(e.target.value)}
-                placeholder="Enter email address"
-                className="flex-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-              />
-              <button
-                type="submit"
-                disabled={sharing}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                {sharing ? 'Sharing...' : 'Share'}
-              </button>
-            </form>
-
-            <h4 className="text-lg font-medium text-gray-900 mt-8 mb-4">Shared With</h4>
-            {shares.length === 0 ? (
-              <p className="text-sm text-gray-500">This document hasn&apos;t been shared with anyone yet.</p>
-            ) : (
-              <ul className="divide-y divide-gray-200">
-                {shares.map((share) => (
-                  <li key={share.id} className="py-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {share.sharedWithEmail}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          Shared on {new Date(share.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div>
-                        {share.status === 'pending' && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                            Pending
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+        {/* Document Viewer */}
+        {document.r2Storage && document.fileName && (
+          <div className="mb-8">
+            <PDFViewer 
+              fileName={document.fileName} 
+              title={document.title}
+            />
           </div>
+        )}
 
-          <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
-            <a
-              href={document.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              View Document
-            </a>
-          </div>
+        {/* Navigation */}
+        <div className="flex justify-between">
+          <Link
+            href="/documents"
+            className="px-6 py-3 border border-blue-500/50 text-blue-300 hover:text-blue-200 hover:border-blue-400 rounded-lg font-medium transition-all duration-300 electric-border"
+          >
+            ← Back to Documents
+          </Link>
+          
+          <Link
+            href={`/documents/${documentId}/edit`}
+            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-medium rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl electric-glow"
+          >
+            Edit Document
+          </Link>
         </div>
       </div>
     </div>
