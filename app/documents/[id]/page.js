@@ -8,6 +8,7 @@ import Navbar from '@/components/Navbar';
 import documentService from '@/lib/services/document-service';
 import { formatDate } from '@/lib/utils/date-utils';
 import PDFViewer from '@/components/PDFViewer';
+import shareService from '@/lib/services/share-service';
 
 export default function DocumentViewPage() {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -18,6 +19,12 @@ export default function DocumentViewPage() {
   const [document, setDocument] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareEmail, setShareEmail] = useState('');
+  const [sharePermissions, setSharePermissions] = useState('read');
+  const [sharing, setSharing] = useState(false);
+  const [shareSuccess, setShareSuccess] = useState('');
+  const [shareError, setShareError] = useState('');
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -59,6 +66,44 @@ export default function DocumentViewPage() {
     }
   };
 
+  const handleShare = async () => {
+    if (!shareEmail.trim()) {
+      setShareError('Please enter an email address');
+      return;
+    }
+
+    try {
+      setSharing(true);
+      setShareError('');
+      
+      const userEmail = user?.primaryEmailAddress?.emailAddress;
+      const documentIdToShare = document.fileName || document.cloudinaryId || document.id;
+      
+      await shareService.shareDocument(
+        documentIdToShare,
+        shareEmail.trim(),
+        sharePermissions,
+        userEmail
+      );
+
+      setShareSuccess(`Document shared successfully with ${shareEmail}`);
+      setShareEmail('');
+      setSharePermissions('read');
+      
+      // Close modal after a delay
+      setTimeout(() => {
+        setShowShareModal(false);
+        setShareSuccess('');
+      }, 2000);
+      
+    } catch (err) {
+      console.error('Error sharing document:', err);
+      setShareError('Failed to share document. Please try again.');
+    } finally {
+      setSharing(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -83,11 +128,93 @@ export default function DocumentViewPage() {
             >
               Back to Documents
             </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+                                     </div>
+       </div>
+
+       {/* Sharing Modal */}
+       {showShareModal && (
+         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+           <div className="bg-black/90 border border-blue-500/30 rounded-xl p-6 w-full max-w-md mx-4 electric-border">
+             <div className="flex justify-between items-center mb-4">
+               <h3 className="text-xl font-semibold text-white electric-text">Share Document</h3>
+               <button
+                 onClick={() => setShowShareModal(false)}
+                 className="text-blue-400 hover:text-blue-300 transition-colors duration-300"
+               >
+                 <i className="fa-solid fa-times text-xl"></i>
+               </button>
+             </div>
+
+             <div className="space-y-4">
+               <div>
+                 <label className="block text-sm font-medium text-blue-200 mb-2">
+                   Share with (Email)
+                 </label>
+                 <input
+                   type="email"
+                   value={shareEmail}
+                   onChange={(e) => setShareEmail(e.target.value)}
+                   placeholder="Enter email address"
+                   className="w-full px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white placeholder-blue-300/50 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                 />
+               </div>
+
+               <div>
+                 <label className="block text-sm font-medium text-blue-200 mb-2">
+                   Permissions
+                 </label>
+                 <select
+                   value={sharePermissions}
+                   onChange={(e) => setSharePermissions(e.target.value)}
+                   className="w-full px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                 >
+                   <option value="read">Read Only</option>
+                   <option value="comment">Comment</option>
+                   <option value="edit">Edit</option>
+                 </select>
+               </div>
+
+               {shareError && (
+                 <div className="bg-red-900/50 border border-red-500/50 text-red-200 px-3 py-2 rounded text-sm">
+                   {shareError}
+                 </div>
+               )}
+
+               {shareSuccess && (
+                 <div className="bg-red-900/50 border border-green-500/50 text-green-200 px-3 py-2 rounded text-sm">
+                   {shareSuccess}
+                 </div>
+               )}
+
+               <div className="flex space-x-3 pt-2">
+                 <button
+                   onClick={() => setShowShareModal(false)}
+                   className="flex-1 px-4 py-2 border border-blue-500/50 text-blue-300 hover:text-blue-200 hover:border-blue-400 rounded-lg font-medium transition-all duration-300"
+                 >
+                   Cancel
+                 </button>
+                 <button
+                   onClick={handleShare}
+                   disabled={sharing || !shareEmail.trim()}
+                   className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors duration-300"
+                 >
+                   {sharing ? (
+                     <span className="flex items-center justify-center">
+                       <i className="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                       Sharing...
+                     </span>
+                   ) : (
+                     'Share Document'
+                   )}
+                 </button>
+               </div>
+             </div>
+           </div>
+         </div>
+       )}
+     </div>
+   );
+ }
 
   return (
     <div className="min-h-screen bg-black">
@@ -196,7 +323,7 @@ export default function DocumentViewPage() {
                       Download Document
                     </button>
                     <button
-                      onClick={() => window.open('#', '_blank')}
+                      onClick={() => setShowShareModal(true)}
                       className="w-full px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors duration-300"
                     >
                       Share Document
@@ -253,6 +380,88 @@ export default function DocumentViewPage() {
           </Link>
         </div>
       </div>
+
+      {/* Sharing Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-black/90 border border-blue-500/30 rounded-xl p-6 w-full max-w-md mx-4 electric-border">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-white electric-text">Share Document</h3>
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="text-blue-400 hover:text-blue-300 transition-colors duration-300"
+              >
+                <i className="fa-solid fa-times text-xl"></i>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-blue-200 mb-2">
+                  Share with (Email)
+                </label>
+                <input
+                  type="email"
+                  value={shareEmail}
+                  onChange={(e) => setShareEmail(e.target.value)}
+                  placeholder="Enter email address"
+                  className="w-full px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white placeholder-blue-300/50 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-blue-200 mb-2">
+                  Permissions
+                </label>
+                <select
+                  value={sharePermissions}
+                  onChange={(e) => setSharePermissions(e.target.value)}
+                  className="w-full px-3 py-2 bg-black/50 border border-blue-500/30 rounded-lg text-white focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                >
+                  <option value="read">Read Only</option>
+                  <option value="comment">Comment</option>
+                  <option value="edit">Edit</option>
+                </select>
+              </div>
+
+              {shareError && (
+                <div className="bg-red-900/50 border border-red-500/50 text-red-200 px-3 py-2 rounded text-sm">
+                  {shareError}
+                </div>
+              )}
+
+              {shareSuccess && (
+                <div className="bg-green-900/50 border border-green-500/50 text-green-200 px-3 py-2 rounded text-sm">
+                  {shareSuccess}
+                </div>
+              )}
+
+              <div className="flex space-x-3 pt-2">
+                <button
+                  onClick={() => setShowShareModal(false)}
+                  className="flex-1 px-4 py-2 border border-blue-500/50 text-blue-300 hover:text-blue-200 hover:border-blue-400 rounded-lg font-medium transition-all duration-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleShare}
+                  disabled={sharing || !shareEmail.trim()}
+                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors duration-300"
+                >
+                  {sharing ? (
+                    <span className="flex items-center justify-center">
+                      <i className="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                      Sharing...
+                    </span>
+                  ) : (
+                    'Share Document'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

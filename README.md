@@ -191,3 +191,13 @@ If you encounter any issues or have questions:
 ---
 
 **Built with ❤️ using Next.js and modern web technologies**
+
+## 🗂️ .gitignore Best Practices
+
+- The `.gitignore` file is pre-configured for Next.js, Node.js, and common cloud deployment scenarios.
+- **All user uploads are stored in Cloudinary**; there is no local uploads directory to ignore.
+- Sensitive files, build artifacts, environment variables, editor files, and OS files are all excluded from version control.
+- If you add new tools, editors, or environments, update `.gitignore` accordingly.
+
+## 🔒 Production UI Note
+- The Debug button has been removed from the navigation and dashboard for production deployments to ensure a clean user experience.

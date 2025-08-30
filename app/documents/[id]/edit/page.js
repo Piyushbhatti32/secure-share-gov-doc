@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import Navbar from '@/components/Navbar';
-import mockDataService from '@/lib/services/mock-data-service';
+import documentService from '@/lib/services/document-service';
 
 export default function EditDocumentPage() {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -38,7 +38,7 @@ export default function EditDocumentPage() {
   const fetchDocument = async () => {
     try {
       setLoading(true);
-      const doc = await mockDataService.getDocument(documentId);
+      const doc = await documentService.getDocument(documentId);
       if (doc) {
         setDocument(doc);
         setFormData({
@@ -65,7 +65,7 @@ export default function EditDocumentPage() {
       setSaving(true);
       setError(null);
       
-      const updatedDoc = await mockDataService.updateDocument(documentId, {
+      const updatedDoc = await documentService.updateDocument(documentId, {
         title: formData.title,
         description: formData.description,
         type: formData.type,

@@ -7,12 +7,16 @@ import Navbar from '@/components/Navbar';
 import { formatDate, formatRelativeTime } from '@/lib/utils/date-utils';
 import { ActivityIcons, logActivity, ActivityType } from '@/lib/services/activity-service';
 import { useUser, useAuth } from '@clerk/nextjs';
+import documentService from '@/lib/services/document-service';
+import shareService from '@/lib/services/share-service';
 
 export default function DashboardPage() {
   const { user, isLoaded, isSignedIn } = useUser();
   const { userId } = useAuth();
   const [recentDocuments, setRecentDocuments] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
+  const [totalDocumentsCount, setTotalDocumentsCount] = useState(0);
+  const [sharedDocumentsCount, setSharedDocumentsCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [activityLoading, setActivityLoading] = useState(true);
   const [activityError, setActivityError] = useState(null);
@@ -25,12 +29,48 @@ export default function DashboardPage() {
       router.push('/sign-in');
       return;
     }
-    // For now, set empty arrays since mockDataService is removed
-    setRecentDocuments([]);
-    setRecentActivity([]);
-    setLoading(false);
-    setActivityLoading(false);
-  }, [isLoaded, isSignedIn, userId, router]);
+
+    fetchDashboardData();
+  }, [isLoaded, isSignedIn, userId, router, user]);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setActivityLoading(true);
+
+      console.log('🔄 Fetching dashboard data...');
+
+      // Fetch documents and shared documents
+      const [documents, sharedDocs] = await Promise.all([
+        documentService.getDocuments(),
+        shareService.getDocumentsSharedBy(user?.primaryEmailAddress?.emailAddress || '')
+      ]);
+
+      console.log('📄 Documents fetched:', documents);
+      console.log('🔗 Shared documents fetched:', sharedDocs);
+
+      setRecentDocuments(documents.slice(0, 5)); // Show last 5 documents
+      setTotalDocumentsCount(documents.length);
+      setSharedDocumentsCount(sharedDocs.length);
+      setRecentActivity([]); // For now, keep empty until activity service is implemented
+      
+      console.log('✅ Dashboard data updated:', {
+        totalDocuments: documents.length,
+        sharedDocuments: sharedDocs.length,
+        recentDocuments: documents.slice(0, 5).length
+      });
+      
+    } catch (error) {
+      console.error('❌ Error fetching dashboard data:', error);
+      setRecentDocuments([]);
+      setTotalDocumentsCount(0);
+      setSharedDocumentsCount(0);
+      setRecentActivity([]);
+    } finally {
+      setLoading(false);
+      setActivityLoading(false);
+    }
+  };
 
   // Removed fetchRecentData and all mockDataService usage
 
@@ -67,7 +107,7 @@ export default function DashboardPage() {
               </div>
               <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                 <p className="text-blue-200 text-xs sm:text-sm">Total Documents</p>
-                <p className="text-xl sm:text-2xl font-bold text-white truncate">{recentDocuments.length}</p>
+                <p className="text-xl sm:text-2xl font-bold text-white truncate">{totalDocumentsCount}</p>
               </div>
             </div>
           </div>
@@ -79,7 +119,7 @@ export default function DashboardPage() {
               </div>
               <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                 <p className="text-green-200 text-xs sm:text-sm">Shared</p>
-                <p className="text-xl sm:text-2xl font-bold text-white truncate">0</p>
+                <p className="text-xl sm:text-2xl font-bold text-white truncate">{sharedDocumentsCount}</p>
               </div>
             </div>
           </div>
@@ -136,18 +176,18 @@ export default function DashboardPage() {
             ) : (
               <div className="space-y-4">
                 {recentDocuments.map((doc) => (
-                  <div key={doc.id} className="flex items-center justify-between p-3 sm:p-4 bg-black/20 rounded-lg border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300">
+                  <div key={doc.public_id || doc.id} className="flex items-center justify-between p-3 sm:p-4 bg-black/20 rounded-lg border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300">
                     <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
                       <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center flex-shrink-0">
                         <i className="fa-solid fa-file-lines text-white text-sm sm:text-base"></i>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-white font-medium text-sm sm:text-base truncate">{doc.name}</p>
-                        <p className="text-blue-200 text-xs sm:text-sm">{formatRelativeTime(doc.createdAt)}</p>
+                        <p className="text-white font-medium text-sm sm:text-base truncate">{doc.display_name || doc.original_filename || doc.name || 'Untitled Document'}</p>
+                        <p className="text-blue-200 text-xs sm:text-sm">{formatRelativeTime(doc.created_at || doc.uploadedAt || doc.createdAt || new Date())}</p>
                       </div>
                     </div>
                     <Link 
-                      href={`/documents/${doc.id}`}
+                      href={`/documents/${doc.public_id || doc.id}`}
                       className="text-blue-400 hover:text-blue-300 transition-colors duration-300 flex-shrink-0 ml-2"
                     >
                       <i className="fa-solid fa-up-right-from-square"></i>

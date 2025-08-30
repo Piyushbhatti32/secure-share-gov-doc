@@ -1,25 +1,25 @@
 import { NextResponse } from 'next/server';
-import { getR2Status } from '@/lib/services/r2-storage-service';
 
 export async function GET() {
   try {
-    const status = getR2Status();
-    
     return NextResponse.json({
       success: true,
-      status: status,
+      status: {
+        configured: false,
+        message: "R2 storage is not used in this application. Using Cloudinary for document storage.",
+        storage: "Cloudinary"
+      },
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error checking R2 status:', error);
+    console.error('Error checking storage status:', error);
     
     return NextResponse.json({
       success: false,
       error: error.message,
       status: {
         configured: false,
-        error: error.message,
-        missingVars: []
+        error: error.message
       },
       timestamp: new Date().toISOString()
     }, { status: 500 });
