@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import mockDataService from '@/lib/services/mock-data-service';
+import documentService from '@/lib/services/document-service';
 import { formatDate } from '@/lib/utils/date-utils';
 import PDFViewer from '@/components/PDFViewer';
 
@@ -33,7 +33,7 @@ export default function DocumentViewPage() {
   const fetchDocument = async () => {
     try {
       setLoading(true);
-      const doc = await mockDataService.getDocument(documentId);
+      const doc = await documentService.getDocument(documentId);
       if (doc) {
         setDocument(doc);
       } else {
@@ -50,7 +50,7 @@ export default function DocumentViewPage() {
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
       try {
-        await mockDataService.deleteDocument(documentId);
+        await documentService.deleteDocument(documentId);
         router.push('/documents');
       } catch (err) {
         console.error('Error deleting document:', err);
@@ -209,12 +209,30 @@ export default function DocumentViewPage() {
         </div>
 
         {/* Document Viewer */}
-        {document.r2Storage && document.fileName && (
+        {document.r2Storage && document.fileName ? (
           <div className="mb-8">
             <PDFViewer 
               fileName={document.fileName} 
               title={document.title}
             />
+          </div>
+        ) : (
+          <div className="mb-8">
+            <div className="bg-yellow-500/10 rounded-lg border border-yellow-500/30 p-8 text-center">
+              <svg className="w-16 h-16 text-yellow-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <h3 className="text-lg font-semibold text-yellow-300 mb-2">Document File Not Available</h3>
+              <p className="text-yellow-200 mb-4">
+                This document doesn't have an associated file uploaded yet.
+              </p>
+              <Link
+                href={`/documents/${documentId}/edit`}
+                className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-300"
+              >
+                Upload File
+              </Link>
+            </div>
           </div>
         )}
 

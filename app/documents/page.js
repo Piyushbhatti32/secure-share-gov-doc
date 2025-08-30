@@ -6,7 +6,6 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import DocumentCard from '@/components/DocumentCard';
 import { useUser } from '@clerk/nextjs';
-import mockDataService from '@/lib/services/mock-data-service';
 
 export default function DocumentsPage() {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -17,19 +16,41 @@ export default function DocumentsPage() {
 
   useEffect(() => {
     if (!isLoaded) return;
-
     if (!isSignedIn) {
       router.push('/sign-in');
       return;
     }
-
     fetchDocuments();
   }, [isLoaded, isSignedIn, router]);
 
   const fetchDocuments = async () => {
     try {
       setLoading(true);
-      const docs = await mockDataService.getDocuments(user?.id);
+      const response = await fetch('/api/documents');
+      if (!response.ok) throw new Error('Failed to fetch documents');
+      const result = await response.json();
+      // Map Cloudinary resources to expected document fields
+      const docs = (result.documents || []).map((doc) => ({
+        id: doc.asset_id || doc.public_id,
+        title: doc.context?.custom?.title || doc.public_id.split('/').pop(),
+        description: doc.context?.custom?.description || '',
+        type: doc.context?.custom?.type || doc.resource_type,
+        tags: doc.tags || [],
+        fileName: doc.public_id,
+        originalFileName: doc.context?.custom?.original_filename || doc.public_id.split('/').pop(),
+        fileSize: doc.bytes,
+        fileType: doc.format,
+        status: 'active',
+        r2Storage: true,
+        cloudinaryId: doc.public_id,
+        uploadedAt: doc.created_at,
+        url: doc.secure_url,
+        format: doc.format,
+        width: doc.width,
+        height: doc.height,
+        createdAt: doc.created_at,
+        updatedAt: doc.created_at,
+      }));
       setDocuments(docs);
       setError(null);
     } catch (err) {
@@ -40,13 +61,23 @@ export default function DocumentsPage() {
     }
   };
 
-  const handleDeleteDocument = async (documentId) => {
+  const handleDeleteDocument = async (public_id) => {
+    if (!window.confirm('Are you sure you want to delete this document? This action cannot be undone.')) return;
     try {
-      await mockDataService.deleteDocument(documentId);
-      setDocuments(documents.filter(doc => doc.id !== documentId));
+      setLoading(true);
+      const response = await fetch('/api/documents', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ public_id }),
+      });
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error || 'Failed to delete document');
+      await fetchDocuments();
     } catch (err) {
       console.error('Error deleting document:', err);
       setError('Failed to delete document');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -83,7 +114,6 @@ export default function DocumentsPage() {
   return (
     <div className="min-h-screen bg-black">
       <Navbar />
-      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
@@ -102,7 +132,6 @@ export default function DocumentsPage() {
             Upload Document
           </Link>
         </div>
-
         {/* Documents Grid */}
         {documents.length === 0 ? (
           <div className="text-center py-16">

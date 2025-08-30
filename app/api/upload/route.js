@@ -1,162 +1,119 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
-import { uploadDocument } from '@/lib/services/r2-storage-service';
+import { uploadToCloudinary, checkCloudinaryConfig } from '@/lib/services/cloudinary-service';
 
 export async function POST(request) {
   try {
-    console.log('Upload API called');
+    console.log('🚀 Upload API called');
     
-    // Authenticate user
-    const { userId } = await auth();
-    console.log('User authenticated:', userId);
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Check Cloudinary configuration
+    if (!checkCloudinaryConfig()) {
+      console.error('❌ Cloudinary not configured');
+      return NextResponse.json(
+        { error: 'Cloudinary storage not configured. Please check your environment variables.' },
+        { status: 500 }
+      );
     }
 
+    // Parse the form data
     const formData = await request.formData();
     const file = formData.get('file');
-    const title = formData.get('title');
-    const description = formData.get('description');
-    const type = formData.get('type');
-    const tags = formData.get('tags');
-
+    
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+      console.error('❌ No file provided');
+      return NextResponse.json(
+        { error: 'No file provided' },
+        { status: 400 }
+      );
     }
 
-    // Validate file
-    if (!(file instanceof File)) {
-      return NextResponse.json({ error: 'Invalid file' }, { status: 400 });
-    }
+    console.log('📁 File received:', {
+      name: file.name,
+      type: file.type,
+      size: (file.size / 1024 / 1024).toFixed(2) + ' MB'
+    });
 
-    // Enhanced file size validation (max 50MB)
+    // Validate file size (50MB limit)
     const maxSize = 50 * 1024 * 1024; // 50MB
     if (file.size > maxSize) {
-      return NextResponse.json({ 
-        error: `File size must be less than ${(maxSize / 1024 / 1024).toFixed(0)}MB` 
-      }, { status: 400 });
+      console.error('❌ File too large:', file.size);
+      return NextResponse.json(
+        { error: 'File size must be less than 50MB' },
+        { status: 413 }
+      );
     }
 
-    // Enhanced file type validation with more formats
+    // Validate file type (Cloudinary supports images, videos, audio, and raw files)
     const allowedTypes = [
-      // Documents
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/vnd.ms-powerpoint',
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-      'text/plain', 'text/csv', 'text/html', 'text/rtf',
-      
       // Images
-      'image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp',
-      'image/svg+xml', 'image/bmp', 'image/tiff',
-      
-      // Archives
-      'application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed',
-      'application/x-tar', 'application/gzip',
-      
-      // Audio/Video (for document purposes)
-      'audio/mpeg', 'audio/wav', 'audio/ogg',
-      'video/mp4', 'video/avi', 'video/mov', 'video/wmv'
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+      // Videos
+      'video/mp4', 'video/webm', 'video/ogg', 'video/avi', 'video/mov',
+      // Audio
+      'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/aac',
+      // Documents (as raw files)
+      'text/plain', 'text/csv', 'text/html', 'application/json', 'application/xml'
     ];
     
     if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ 
-        error: 'File type not supported. Please upload PDF, image, document, or archive files.' 
-      }, { status: 400 });
+      console.error('❌ File type not supported:', file.type);
+      return NextResponse.json(
+        { error: `File type not supported. Supported types: ${allowedTypes.join(', ')}` },
+        { status: 400 }
+      );
     }
 
-    // Additional security checks
-    const fileName = file.name.toLowerCase();
-    const dangerousExtensions = ['.exe', '.bat', '.cmd', '.com', '.scr', '.pif', '.vbs', '.js'];
-    const hasDangerousExtension = dangerousExtensions.some(ext => fileName.endsWith(ext));
+    // Convert file to buffer
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
     
-    if (hasDangerousExtension) {
-      return NextResponse.json({ 
-        error: 'Executable files are not allowed for security reasons.' 
-      }, { status: 400 });
-    }
+    console.log('📊 File converted to buffer, size:', buffer.length);
 
-    // Generate unique filename with better structure
-    const timestamp = Date.now();
-    const fileExtension = file.name.split('.').pop().toLowerCase();
-    const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30);
-    const uniqueFileName = `${userId}_${sanitizedTitle}_${timestamp}.${fileExtension}`;
+    // Upload to Cloudinary
+    console.log('☁️ Uploading to Cloudinary...');
+    const uploadResult = await uploadToCloudinary(buffer, file.name, file.type);
+    
+    console.log('✅ Upload successful:', uploadResult);
 
-    // Convert file to buffer with progress tracking
-    console.log('Converting file to buffer...');
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
-    console.log(`File converted: ${fileBuffer.length} bytes`);
-
-    // Upload to R2 with enhanced error handling
-    console.log('Calling R2 upload service...');
-    try {
-      await uploadDocument(fileBuffer, uniqueFileName, file.type);
-      console.log('R2 upload completed successfully');
-    } catch (uploadError) {
-      console.error('R2 upload failed:', uploadError);
-      return NextResponse.json({ 
-        error: 'Failed to upload file to cloud storage. Please try again.',
-        details: uploadError.message 
-      }, { status: 500 });
-    }
-
-    // Calculate file hash for integrity (simplified)
-    const fileHash = require('crypto').createHash('md5').update(fileBuffer).digest('hex');
-
-    // Return success response with enhanced file info
+    // Return success response
     return NextResponse.json({
       success: true,
-      message: 'File uploaded successfully to secure cloud storage',
-      file: {
-        originalName: file.name,
-        fileName: uniqueFileName,
-        size: file.size,
-        type: file.type,
-        title: title || file.name,
-        description: description || '',
-        documentType: type || 'other',
-        tags: tags ? tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [],
-        uploadedAt: new Date().toISOString(),
-        userId,
-        fileHash,
-        secure: true,
-        cloudStorage: 'Cloudflare R2',
-        maxSize: `${(maxSize / 1024 / 1024).toFixed(0)}MB`
+      message: 'File uploaded successfully to Cloudinary',
+      file: uploadResult.file,
+      cloudinary: {
+        publicId: uploadResult.cloudinary.public_id,
+        url: uploadResult.cloudinary.secure_url,
+        format: uploadResult.cloudinary.format
       }
     });
 
   } catch (error) {
-    console.error('Upload API error:', error);
+    console.error('❌ Upload API error:', error);
     
-    // Handle specific error types
-    if (error.message.includes('size')) {
-      return NextResponse.json({ 
-        error: 'File size validation failed',
+    return NextResponse.json(
+      { 
+        error: 'Failed to upload file to cloud storage. Please try again.',
         details: error.message 
-      }, { status: 400 });
-    }
-    
-    if (error.message.includes('type')) {
-      return NextResponse.json({ 
-        error: 'File type validation failed',
-        details: error.message 
-      }, { status: 400 });
-    }
-    
-    return NextResponse.json({ 
-      error: 'Failed to upload file',
-      details: error.message 
-    }, { status: 500 });
+      },
+      { status: 500 }
+    );
   }
 }
 
 export async function GET() {
+  // Log environment variables on GET request too for debugging
+  console.log('🔍 GET Request - Environment Variables Check:');
+  console.log('R2_ACCOUNT_ID:', process.env.R2_ACCOUNT_ID ? `${process.env.R2_ACCOUNT_ID.substring(0, 8)}...` : 'NOT SET');
+  console.log('R2_ACCESS_KEY_ID:', process.env.R2_ACCESS_KEY_ID ? `${process.env.R2_ACCESS_KEY_ID.substring(0, 8)}...` : 'NOT SET');
+  console.log('R2_SECRET_ACCESS_KEY:', process.env.R2_SECRET_ACCESS_KEY ? `${process.env.R2_SECRET_ACCESS_KEY.substring(0, 8)}...` : 'NOT SET');
+  console.log('R2_BUCKET_NAME:', process.env.R2_BUCKET_NAME || 'NOT SET');
+  console.log('NODE_ENV:', process.env.NODE_ENV || 'NOT SET');
+  
   return NextResponse.json({ 
     error: 'Method not allowed',
-    message: 'Use POST method to upload files'
+    message: 'Use POST method to upload files',
+    envCheck: {
+      r2Configured: !!(process.env.R2_ACCOUNT_ID && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY && process.env.R2_BUCKET_NAME),
+      missingVars: ['R2_ACCOUNT_ID', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY', 'R2_BUCKET_NAME'].filter(varName => !process.env[varName])
+    }
   }, { status: 405 });
 }

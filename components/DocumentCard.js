@@ -26,7 +26,7 @@ export default function DocumentCard({ document, onDelete }) {
 
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to delete this document?')) {
-      onDelete(document.id);
+      onDelete(document.fileName);
     }
   };
 
@@ -40,7 +40,7 @@ export default function DocumentCard({ document, onDelete }) {
       setDownloading(true);
       
       // Get download URL from API
-      const response = await fetch(`/api/download/${document.fileName}`);
+      const response = await fetch(`/api/download?file=${encodeURIComponent(document.fileName)}`);
       if (!response.ok) {
         throw new Error('Failed to generate download link');
       }
@@ -48,7 +48,7 @@ export default function DocumentCard({ document, onDelete }) {
       const data = await response.json();
       
       // Open download URL in new tab
-      window.open(data.downloadUrl, '_blank');
+      window.open(data.url, '_blank');
     } catch (error) {
       console.error('Download error:', error);
       alert('Failed to download document. Please try again.');

@@ -66,6 +66,14 @@ export default function Navbar() {
                 >
                   Security
                 </Link>
+                {process.env.NODE_ENV === 'development' && (
+                  <Link
+                    href="/debug"
+                    className="text-yellow-200 hover:text-yellow-100 transition-colors duration-300"
+                  >
+                    Debug
+                  </Link>
+                )}
               </>
             )}
           </div>
@@ -139,6 +147,15 @@ export default function Navbar() {
                   >
                     Security
                   </Link>
+                  {process.env.NODE_ENV === 'development' && (
+                    <Link
+                      href="/debug"
+                      className="block px-3 py-2 text-yellow-200 hover:text-yellow-100 hover:bg-yellow-500/20 rounded-md transition-colors duration-300"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Debug
+                    </Link>
+                  )}
                 </>
               )}
             </div>

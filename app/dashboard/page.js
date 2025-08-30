@@ -7,7 +7,6 @@ import Navbar from '@/components/Navbar';
 import { formatDate, formatRelativeTime } from '@/lib/utils/date-utils';
 import { ActivityIcons, logActivity, ActivityType } from '@/lib/services/activity-service';
 import { useUser, useAuth } from '@clerk/nextjs';
-import mockDataService from '@/lib/services/mock-data-service';
 
 export default function DashboardPage() {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -26,27 +25,14 @@ export default function DashboardPage() {
       router.push('/sign-in');
       return;
     }
-    
-    fetchRecentData(userId);
+    // For now, set empty arrays since mockDataService is removed
+    setRecentDocuments([]);
+    setRecentActivity([]);
     setLoading(false);
+    setActivityLoading(false);
   }, [isLoaded, isSignedIn, userId, router]);
 
-  const fetchRecentData = async (currentUserId) => {
-    try {
-      // Fetch recent documents using mock service
-      const docs = await mockDataService.getDocuments(currentUserId);
-      setRecentDocuments(docs.slice(0, 5));
-
-      // Fetch recent activity using mock service
-      const activities = await mockDataService.getActivities(currentUserId);
-      setRecentActivity(activities.slice(0, 10));
-      setActivityLoading(false);
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      setActivityError('Failed to load recent activity');
-      setActivityLoading(false);
-    }
-  };
+  // Removed fetchRecentData and all mockDataService usage
 
   if (loading || !isLoaded) {
     return (

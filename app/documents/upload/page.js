@@ -6,7 +6,8 @@ import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import EnhancedFileUpload from '@/components/EnhancedFileUpload';
-import mockDataService from '@/lib/services/mock-data-service';
+import CloudinaryConfigurationChecker from '@/components/CloudinaryConfigurationChecker';
+import documentService from '@/lib/services/document-service';
 
 export default function DocumentUploadPage() {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -20,10 +21,9 @@ export default function DocumentUploadPage() {
   });
   
   const [file, setFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [triggerUpload, setTriggerUpload] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -60,21 +60,62 @@ export default function DocumentUploadPage() {
     setError(null);
   };
 
-  const simulateUploadProgress = () => {
-    setUploadProgress(0);
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + Math.random() * 15;
-      });
-    }, 200);
-    return interval;
+  const handleUploadComplete = async (uploadResult) => {
+    try {
+      console.log('Upload completed, saving document metadata...', uploadResult);
+      
+      // Create document data with Cloudinary file info
+      const documentData = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        type: formData.type,
+        tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+        fileName: uploadResult.file.fileName, // This is the Cloudinary public ID
+        originalFileName: uploadResult.file.originalName,
+        fileSize: uploadResult.file.size,
+        fileType: uploadResult.file.type,
+        status: 'active',
+        r2Storage: true, // We'll keep this for compatibility
+        cloudinaryId: uploadResult.file.cloudinaryId, // Store the Cloudinary ID
+        uploadedAt: uploadResult.file.uploadedAt
+      };
+
+      // Add document to document service
+      const newDocument = await documentService.addDocument(documentData);
+
+      if (newDocument) {
+        setSuccess('Document uploaded successfully to secure cloud storage!');
+        
+        // Reset form
+        setFormData({
+          title: '',
+          description: '',
+          type: '',
+          tags: ''
+        });
+        setFile(null);
+        setTriggerUpload(false); // Reset trigger
+        
+        // Redirect to documents page after a short delay
+        setTimeout(() => {
+          router.push('/documents');
+        }, 3000);
+      } else {
+        setError('Failed to save document metadata');
+      }
+    } catch (err) {
+      console.error('Error saving document:', err);
+      setError(`Failed to save document: ${err.message}`);
+    }
   };
 
-  const handleSubmit = async (e) => {
+  const handleUploadError = (error) => {
+    console.error('Upload error:', error);
+    setError(`Upload failed: ${error.message}`);
+    setTriggerUpload(false); // Reset trigger on error
+  };
+
+  const handleFormSubmit = (e) => {
     e.preventDefault();
     
     if (!file) {
@@ -92,84 +133,16 @@ export default function DocumentUploadPage() {
       return;
     }
 
-    try {
-      setUploading(true);
-      setError(null);
-      setSuccess(null);
-      setUploadProgress(0);
-
-      // Simulate upload progress
-      const progressInterval = simulateUploadProgress();
-
-      // Create FormData for file upload
-      const uploadFormData = new FormData();
-      uploadFormData.append('file', file);
-      uploadFormData.append('title', formData.title.trim());
-      uploadFormData.append('description', formData.description.trim());
-      uploadFormData.append('type', formData.type);
-      uploadFormData.append('tags', formData.tags);
-
-      // Upload file to R2 via API
-      const uploadResponse = await fetch('/api/upload', {
-        method: 'POST',
-        body: uploadFormData,
-      });
-
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-
-      if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json();
-        throw new Error(errorData.error || 'Upload failed');
-      }
-
-      const uploadResult = await uploadResponse.json();
-
-      // Create document data with R2 file info
-      const documentData = {
-        title: formData.title.trim(),
-        description: formData.description.trim(),
-        type: formData.type,
-        tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-        fileName: uploadResult.file.fileName,
-        originalFileName: uploadResult.file.originalName,
-        fileSize: uploadResult.file.size,
-        fileType: uploadResult.file.type,
-        status: 'active',
-        r2Storage: true,
-        uploadedAt: uploadResult.file.uploadedAt
-      };
-
-      // Add document to mock service
-      const newDocument = await mockDataService.addDocument(documentData);
-
-      if (newDocument) {
-        setSuccess('Document uploaded successfully to secure cloud storage!');
-        
-        // Reset form
-        setFormData({
-          title: '',
-          description: '',
-          type: '',
-          tags: ''
-        });
-        setFile(null);
-        
-        // Redirect to documents page after a short delay
-        setTimeout(() => {
-          router.push('/documents');
-        }, 3000);
-      } else {
-        setError('Failed to save document metadata');
-      }
-    } catch (err) {
-      console.error('Error uploading document:', err);
-      setError(`Failed to upload document: ${err.message}`);
-    } finally {
-      setUploading(false);
-      setUploadProgress(0);
-    }
+    // Clear any previous errors
+    setError(null);
+    setSuccess(null);
+    
+    // Trigger the upload in the EnhancedFileUpload component
+    console.log('Form validated successfully, triggering upload...');
+    setTriggerUpload(true);
   };
+
+
 
   return (
     <div className="min-h-screen bg-black">
@@ -186,9 +159,14 @@ export default function DocumentUploadPage() {
           </p>
         </div>
 
+        {/* Cloudinary Configuration Checker */}
+        <div className="mb-8">
+          <CloudinaryConfigurationChecker />
+        </div>
+
         {/* Upload Form */}
         <div className="bg-black/40 backdrop-blur-sm rounded-xl border border-blue-500/30 p-8 corner-border corner-blue corner-normal radius-xl">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleFormSubmit} className="space-y-6">
             {/* Enhanced File Upload */}
             <div>
               <label className="block text-sm font-medium text-blue-200 mb-2">
@@ -197,32 +175,19 @@ export default function DocumentUploadPage() {
               <EnhancedFileUpload
                 onFileSelect={handleFileSelect}
                 onFileRemove={handleFileRemove}
-                acceptedTypes=".pdf,.jpg,.jpeg,.png,.gif,.webp,.txt,.csv,.html,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z"
+                onUploadComplete={handleUploadComplete}
+                onUploadError={handleUploadError}
+                acceptedTypes=".jpg,.jpeg,.png,.gif,.webp,.svg,.mp4,.webm,.ogg,.avi,.mov,.mp3,.wav,.aac,.txt,.csv,.html,.json,.xml"
                 maxSize={50 * 1024 * 1024} // 50MB
-                disabled={uploading}
+                autoUpload={false}
+                triggerUpload={triggerUpload}
               />
+              <p className="text-xs text-blue-400 mt-2">
+                💡 <strong>Note:</strong> Only images, video, audio, and text files are supported. PDFs and Office documents are <span className="text-red-400 font-semibold">not supported</span> by Cloudinary.
+              </p>
             </div>
 
-            {/* Upload Progress */}
-            {uploading && uploadProgress > 0 && (
-              <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg corner-border corner-cyan corner-fast radius-lg">
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm text-blue-200">
-                    <span>Uploading to secure cloud storage...</span>
-                    <span>{Math.round(uploadProgress)}%</span>
-                  </div>
-                  <div className="w-full bg-blue-500/20 rounded-full h-3">
-                    <div 
-                      className="bg-gradient-to-r from-blue-500 to-cyan-500 h-3 rounded-full transition-all duration-300 corner-border corner-cyan corner-fast"
-                      style={{ width: `${uploadProgress}%` }}
-                    ></div>
-                  </div>
-                  <div className="text-xs text-blue-300 text-center">
-                    {uploadProgress < 100 ? 'Encrypting and uploading...' : 'Finalizing upload...'}
-                  </div>
-                </div>
-              </div>
-            )}
+
 
             {/* Document Title */}
             <div>
@@ -332,17 +297,10 @@ export default function DocumentUploadPage() {
               </Link>
               <button
                 type="submit"
-                disabled={uploading || !file}
+                disabled={!file}
                 className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-medium rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl electric-glow disabled:opacity-50 disabled:cursor-not-allowed corner-border corner-cyan corner-fast radius-lg"
               >
-                {uploading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Uploading...
-                  </div>
-                ) : (
-                  'Upload Document'
-                )}
+                Upload Document
               </button>
             </div>
           </form>
