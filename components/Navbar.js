@@ -1,12 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useUser } from '@clerk/nextjs';
+import { useBuildSafeUser } from '@/lib/hooks/useBuildSafeAuth';
 import { SignedIn, SignedOut, UserButton, SignInButton, SignUpButton } from '@clerk/nextjs';
 import { useState } from 'react';
 
 export default function Navbar() {
-  const { user, isLoaded, isSignedIn } = useUser();
+  const { user, isLoaded, isSignedIn } = useBuildSafeUser();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   if (!isLoaded) {

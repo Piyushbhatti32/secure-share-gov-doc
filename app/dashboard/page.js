@@ -6,13 +6,13 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { formatDate, formatRelativeTime } from '@/lib/utils/date-utils';
 import { ActivityIcons, logActivity, ActivityType } from '@/lib/services/activity-service';
-import { useUser, useAuth } from '@clerk/nextjs';
+import { useBuildSafeUser, useBuildSafeAuth } from '@/lib/hooks/useBuildSafeAuth';
 import documentService from '@/lib/services/document-service';
 import shareService from '@/lib/services/share-service';
 
 export default function DashboardPage() {
-  const { user, isLoaded, isSignedIn } = useUser();
-  const { userId } = useAuth();
+  const { user, isLoaded, isSignedIn } = useBuildSafeUser();
+  const { userId } = useBuildSafeAuth();
   const [recentDocuments, setRecentDocuments] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [totalDocumentsCount, setTotalDocumentsCount] = useState(0);

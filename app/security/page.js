@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser, useAuth } from '@clerk/nextjs';
+import { useBuildSafeUser, useBuildSafeAuth } from '@/lib/hooks/useBuildSafeAuth';
 import { handleError } from '@/lib/utils/error-handler';
 import Navbar from '@/components/Navbar';
 import TwoFactorSetup from '@/components/TwoFactorSetup';
@@ -22,8 +22,8 @@ export default function SecurityPage() {
     notifyOnShare: true
   });
   const router = useRouter();
-  const { userId, isLoaded } = useAuth();
-  const { user } = useUser();
+  const { userId, isLoaded } = useBuildSafeAuth();
+  const { user } = useBuildSafeUser();
 
   useEffect(() => {
       if (!isLoaded) return;

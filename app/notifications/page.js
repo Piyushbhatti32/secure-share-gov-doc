@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useBuildSafeAuth } from '@/lib/hooks/useBuildSafeAuth';
 import Navbar from '@/components/Navbar';
 import NotificationCenter from '@/components/NotificationCenter';
 
 export default function NotificationsPage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { userId, isLoaded } = useAuth();
+  const { userId, isLoaded } = useBuildSafeAuth();
 
   useEffect(() => {
     if (!isLoaded) return;

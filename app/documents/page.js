@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import DocumentCard from '@/components/DocumentCard';
-import { useUser } from '@clerk/nextjs';
+import { useBuildSafeUser } from '@/lib/hooks/useBuildSafeAuth';
 
 export default function DocumentsPage() {
-  const { user, isLoaded, isSignedIn } = useUser();
+  const { user, isLoaded, isSignedIn } = useBuildSafeUser();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

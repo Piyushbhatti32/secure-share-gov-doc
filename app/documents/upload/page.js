@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@clerk/nextjs';
+import { useBuildSafeUser } from '@/lib/hooks/useBuildSafeAuth';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import EnhancedFileUpload from '@/components/EnhancedFileUpload';
@@ -10,7 +10,7 @@ import CloudinaryConfigurationChecker from '@/components/CloudinaryConfiguration
 import documentService from '@/lib/services/document-service';
 
 export default function DocumentUploadPage() {
-  const { user, isLoaded, isSignedIn } = useUser();
+  const { user, isLoaded, isSignedIn } = useBuildSafeUser();
   const router = useRouter();
   
   const [formData, setFormData] = useState({

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@clerk/nextjs';
+import { useBuildSafeUser } from '@/lib/hooks/useBuildSafeAuth';
 import { getUserProfile, updateUserProfile } from '@/lib/services/user-service';
 import Navbar from '@/components/Navbar';
 
@@ -21,7 +21,7 @@ export default function EncryptionPage() {
   });
   
   const router = useRouter();
-  const { user, isLoaded, isSignedIn } = useUser();
+  const { user, isLoaded, isSignedIn } = useBuildSafeUser();
 
   useEffect(() => {
     const load = async () => {
