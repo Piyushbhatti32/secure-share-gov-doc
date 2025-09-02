@@ -32,6 +32,9 @@ export default function EnhancedFileUpload({
   });
 
   const abortControllerRef = useRef(null);
+  const triggerConsumedRef = useRef(false);
+  const startingUploadRef = useRef(false);
+  const lastCompleteIdRef = useRef(null);
 
   const validateFile = async (selectedFile) => {
     setValidation({
@@ -112,6 +115,11 @@ export default function EnhancedFileUpload({
     }
 
     try {
+      if (startingUploadRef.current) {
+        console.log('⚠️ Upload already starting, skipping duplicate trigger');
+        return;
+      }
+      startingUploadRef.current = true;
       await uploadFile(file); // Call uploadFile for single file upload
     } catch (error) {
       console.error('Upload failed:', error);
@@ -153,6 +161,7 @@ export default function EnhancedFileUpload({
 
       xhr.onload = () => {
         setUploading(false);
+        startingUploadRef.current = false;
         if (xhr.status >= 200 && xhr.status < 300) {
           setUploadProgress(100);
           setUploadStatus({
@@ -162,7 +171,13 @@ export default function EnhancedFileUpload({
           });
           try {
             const result = JSON.parse(xhr.response);
-            onUploadComplete?.(result);
+            const resultId = result?.document?.cloudinaryId || result?.cloudinaryId || result?.documentId || result?.id;
+            if (resultId && lastCompleteIdRef.current === resultId) {
+              console.log('⚠️ Duplicate upload completion detected, ignoring callback for', resultId);
+            } else {
+              lastCompleteIdRef.current = resultId || Date.now();
+              onUploadComplete?.(result);
+            }
             resolve(result);
           } catch (e) {
             onUploadError?.(e);
@@ -181,6 +196,7 @@ export default function EnhancedFileUpload({
 
       xhr.onerror = () => {
         setUploading(false);
+        startingUploadRef.current = false;
         setUploadStatus({
           status: 'error',
           message: 'Upload failed: Network error',
@@ -267,6 +283,7 @@ export default function EnhancedFileUpload({
       secure: false,
       error: null
     });
+    lastCompleteIdRef.current = null;
     onFileRemove?.();
   };
 
@@ -311,9 +328,10 @@ export default function EnhancedFileUpload({
     console.log('🔍 triggerUpload changed:', triggerUpload);
     console.log('🔍 Current state:', { file: !!file, uploading, validationSecure: validation.secure });
     
-    if (triggerUpload && file && validation.secure) {
+    if (triggerUpload && file && validation.secure && !triggerConsumedRef.current) {
       if (!uploading) {
         console.log('🚀 Triggering upload from parent...');
+        triggerConsumedRef.current = true;
         handleUpload();
       } else {
         console.log('⚠️ Upload already in progress, ignoring trigger');
@@ -324,6 +342,10 @@ export default function EnhancedFileUpload({
         isUploading: uploading,
         isSecure: validation.secure
       });
+    }
+    // Reset consumption when triggerUpload turns false
+    if (!triggerUpload) {
+      triggerConsumedRef.current = false;
     }
   }, [triggerUpload, file, uploading, validation.secure]);
 

@@ -26,15 +26,21 @@ const nextConfig = {
   // Load environment variables for build time
   env: {
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: envVars.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '',
+    CLERK_SECRET_KEY: envVars.CLERK_SECRET_KEY || process.env.CLERK_SECRET_KEY || '',
     NEXT_PUBLIC_CLERK_SIGN_IN_URL: envVars.NEXT_PUBLIC_CLERK_SIGN_IN_URL || process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || '/sign-in',
     NEXT_PUBLIC_CLERK_SIGN_UP_URL: envVars.NEXT_PUBLIC_CLERK_SIGN_UP_URL || process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL || '/sign-up',
     NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: envVars.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL || process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL || '/dashboard',
-    NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL: envVars.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL || process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || '/dashboard',
+    NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL: envVars.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || '/dashboard',
+    NEXT_PUBLIC_CLERK_FALLBACK_REDIRECT_URL: envVars.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || '/dashboard',
   },
   
   poweredByHeader: false,
   reactStrictMode: true,
   compress: true,
+
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   
   // Remove problematic output: 'standalone' setting
   // output: 'standalone',

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useBuildSafeUser } from '@/lib/hooks/useBuildSafeAuth';
 import Link from 'next/link';
@@ -24,6 +24,8 @@ export default function DocumentUploadPage() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [triggerUpload, setTriggerUpload] = useState(false);
+  const savingRef = useRef(false);
+  const lastSavedIdRef = useRef(null);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -64,26 +66,40 @@ export default function DocumentUploadPage() {
     try {
       console.log('Upload completed, saving document metadata...', uploadResult);
       
+      const doc = uploadResult?.document || {};
+      const resultId = doc?.cloudinaryId || uploadResult?.cloudinaryId || uploadResult?.documentId || uploadResult?.id;
+      if (resultId && lastSavedIdRef.current === resultId) {
+        console.log('⚠️ Duplicate handleUploadComplete detected for', resultId, '— skipping save');
+        return;
+      }
+      if (savingRef.current) {
+        console.log('⚠️ Save already in progress — skipping duplicate call');
+        return;
+      }
+      savingRef.current = true;
+
       // Create document data with Cloudinary file info
       const documentData = {
         title: formData.title.trim(),
         description: formData.description.trim(),
         type: formData.type,
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-        fileName: uploadResult.file.fileName, // This is the Cloudinary public ID
-        originalFileName: uploadResult.file.originalName,
-        fileSize: uploadResult.file.size,
-        fileType: uploadResult.file.type,
+        // Align to API response shape
+        fileName: doc.cloudinaryId, // Cloudinary public ID (preview for PDFs)
+        originalFileName: doc.metadata?.originalName,
+        fileSize: doc.metadata?.fileSize,
+        fileType: doc.metadata?.format,
         status: 'active',
         r2Storage: true, // We'll keep this for compatibility
-        cloudinaryId: uploadResult.file.cloudinaryId, // Store the Cloudinary ID
-        uploadedAt: uploadResult.file.uploadedAt
+        cloudinaryId: doc.cloudinaryId,
+        uploadedAt: doc.metadata?.uploadedAt
       };
 
       // Add document to document service
       const newDocument = await documentService.addDocument(documentData);
 
       if (newDocument) {
+        lastSavedIdRef.current = resultId || newDocument?.id || Date.now();
         setSuccess('Document uploaded successfully to secure cloud storage!');
         
         // Reset form
@@ -98,6 +114,11 @@ export default function DocumentUploadPage() {
         
         // Redirect to documents page after a short delay
         setTimeout(() => {
+          try {
+            if (typeof window !== 'undefined') {
+              sessionStorage.setItem('refreshDocuments', '1');
+            }
+          } catch {}
           router.push('/documents');
         }, 3000);
       } else {
@@ -106,6 +127,9 @@ export default function DocumentUploadPage() {
     } catch (err) {
       console.error('Error saving document:', err);
       setError(`Failed to save document: ${err.message}`);
+    }
+    finally {
+      savingRef.current = false;
     }
   };
 

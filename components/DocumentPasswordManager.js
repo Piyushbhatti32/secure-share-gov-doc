@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import ConfirmDialog from './ui/ConfirmDialog';
 
 export default function DocumentPasswordManager() {
   const [passwords, setPasswords] = useState([
@@ -62,12 +63,14 @@ export default function DocumentPasswordManager() {
     setError(null);
   };
 
-  const handleDeletePassword = (id) => {
-    if (window.confirm('Are you sure you want to delete this password?')) {
-      setPasswords(prev => prev.filter(pwd => pwd.id !== id));
-      setSuccess('Password deleted successfully!');
-    }
+  const [confirmState, setConfirmState] = useState({ open: false, id: null });
+  const handleDeletePassword = (id) => setConfirmState({ open: true, id });
+  const confirmDelete = () => {
+    setPasswords(prev => prev.filter(pwd => pwd.id !== confirmState.id));
+    setSuccess('Password deleted successfully!');
+    setConfirmState({ open: false, id: null });
   };
+  const cancelDelete = () => setConfirmState({ open: false, id: null });
 
   const handleEditPassword = (id, newPassword) => {
     if (newPassword.length < 6) {
@@ -217,6 +220,17 @@ export default function DocumentPasswordManager() {
           <p className="text-blue-300 text-sm">Add your first document password to get started</p>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmState.open}
+        title="Delete password?"
+        message="This will permanently remove the stored password."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+      />
 
       {/* Messages */}
       {error && (

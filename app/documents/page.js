@@ -1,17 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import DocumentCard from '@/components/DocumentCard';
 import { useBuildSafeUser } from '@/lib/hooks/useBuildSafeAuth';
+import useSWR from 'swr';
+import { jsonFetcher } from '@/lib/utils/fetcher';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function DocumentsPage() {
   const { user, isLoaded, isSignedIn } = useBuildSafeUser();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const { data, isLoading, mutate, error: swrError } = useSWR(
+    isLoaded && isSignedIn ? '/api/documents' : null,
+    jsonFetcher,
+    { revalidateOnFocus: true, revalidateOnMount: true, keepPreviousData: true }
+  );
   const router = useRouter();
 
   useEffect(() => {
@@ -20,38 +29,95 @@ export default function DocumentsPage() {
       router.push('/sign-in');
       return;
     }
-    fetchDocuments();
+    if (isLoaded && isSignedIn) fetchDocuments();
   }, [isLoaded, isSignedIn, router]);
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+    try {
+      if (typeof window !== 'undefined') {
+        const flag = sessionStorage.getItem('refreshDocuments');
+        if (flag === '1') {
+          sessionStorage.removeItem('refreshDocuments');
+          mutate();
+          fetchDocuments();
+        }
+      }
+    } catch {}
+  }, [isLoaded, isSignedIn, mutate]);
 
   const fetchDocuments = async () => {
     try {
-      setLoading(true);
-      const response = await fetch('/api/documents');
-      if (!response.ok) throw new Error('Failed to fetch documents');
-      const result = await response.json();
-      // Map Cloudinary resources to expected document fields
-      const docs = (result.documents || []).map((doc) => ({
-        id: doc.asset_id || doc.public_id,
-        title: doc.context?.custom?.title || doc.public_id.split('/').pop(),
-        description: doc.context?.custom?.description || '',
-        type: doc.context?.custom?.type || doc.resource_type,
-        tags: doc.tags || [],
-        fileName: doc.public_id,
-        originalFileName: doc.context?.custom?.original_filename || doc.public_id.split('/').pop(),
-        fileSize: doc.bytes,
+      if (documents.length === 0) setLoading(true);
+      const result = data || (await jsonFetcher('/api/documents'));
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch documents');
+      }
+
+      // Combine owned and shared documents
+      const ownedDocs = (result.documents?.owned || []).map((doc) => ({
+        id: doc.id,
+        title: doc.name || doc.id.split('/').pop(),
+        description: 'Your document',
+        type: doc.format || 'document',
+        tags: ['owned'],
+        fileName: doc.id,
+        originalFileName: doc.name || doc.id.split('/').pop(),
+        fileSize: doc.size,
         fileType: doc.format,
         status: 'active',
-        r2Storage: true,
-        cloudinaryId: doc.public_id,
-        uploadedAt: doc.created_at,
-        url: doc.secure_url,
+        r2Storage: false,
+        cloudinaryId: doc.id,
+        uploadedAt: doc.uploadedAt,
+        url: doc.url,
         format: doc.format,
-        width: doc.width,
-        height: doc.height,
-        createdAt: doc.created_at,
-        updatedAt: doc.created_at,
+        width: null,
+        height: null,
+        createdAt: doc.uploadedAt,
+        updatedAt: doc.uploadedAt,
+        isOwner: true,
+        accessLevel: 'owner'
       }));
-      setDocuments(docs);
+
+      const sharedDocs = (result.documents?.shared || []).map((doc) => ({
+        id: doc.id,
+        title: doc.name || doc.id.split('/').pop(),
+        description: `Shared by ${doc.ownerEmail || doc.ownerId}`,
+        type: doc.format || 'document',
+        tags: ['shared'],
+        fileName: doc.id,
+        originalFileName: doc.name || doc.id.split('/').pop(),
+        fileSize: doc.size,
+        fileType: doc.format,
+        status: 'active',
+        r2Storage: false,
+        cloudinaryId: doc.id,
+        uploadedAt: doc.sharedAt || doc.uploadedAt,
+        url: doc.url,
+        format: doc.format,
+        width: null,
+        height: null,
+        createdAt: doc.sharedAt || doc.uploadedAt,
+        updatedAt: doc.sharedAt || doc.uploadedAt,
+        isOwner: false,
+        accessLevel: 'shared',
+        ownerId: doc.ownerId,
+        permissions: doc.permissions || ['read']
+      }));
+
+      // Combine, de-duplicate by id, and sort by creation date (newest first)
+      const byId = new Map();
+      [...ownedDocs, ...sharedDocs].forEach(doc => {
+        if (!byId.has(doc.id)) {
+          byId.set(doc.id, doc);
+        }
+      });
+      const allDocs = Array.from(byId.values()).sort((a, b) =>
+        new Date(b.createdAt) - new Date(a.createdAt)
+      );
+
+      setDocuments(allDocs);
       setError(null);
     } catch (err) {
       console.error('Error fetching documents:', err);
@@ -61,31 +127,32 @@ export default function DocumentsPage() {
     }
   };
 
-  const handleDeleteDocument = async (public_id) => {
-    if (!window.confirm('Are you sure you want to delete this document? This action cannot be undone.')) return;
+  const handleDeleteDocument = async (documentId) => {
     try {
-      setLoading(true);
+      // optimistic UI: remove immediately
+      setDocuments(prev => prev.filter(d => d.id !== documentId));
       const response = await fetch('/api/documents', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ public_id }),
+        body: JSON.stringify({ documentId }),
       });
       const result = await response.json();
       if (!result.success) throw new Error(result.error || 'Failed to delete document');
-      await fetchDocuments();
+      mutate();
     } catch (err) {
       console.error('Error deleting document:', err);
       setError('Failed to delete document');
+      mutate();
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
+  if (loading || isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <LoadingSpinner size="xl" color="white" className="mb-4" />
           <p className="text-blue-200">Loading documents...</p>
         </div>
       </div>
@@ -132,6 +199,29 @@ export default function DocumentsPage() {
             Upload Document
           </Link>
         </div>
+
+        {/* Document Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+            <div className="text-2xl font-bold text-blue-400">
+              {documents.filter(doc => doc.isOwner).length}
+            </div>
+            <div className="text-gray-300 text-sm">Owned Documents</div>
+          </div>
+          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+            <div className="text-2xl font-bold text-green-400">
+              {documents.filter(doc => !doc.isOwner).length}
+            </div>
+            <div className="text-gray-300 text-sm">Shared Documents</div>
+          </div>
+          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+            <div className="text-2xl font-bold text-purple-400">
+              {documents.length}
+            </div>
+            <div className="text-gray-300 text-sm">Total Documents</div>
+          </div>
+        </div>
+
         {/* Documents Grid */}
         {documents.length === 0 ? (
           <div className="text-center py-16">
@@ -158,6 +248,7 @@ export default function DocumentsPage() {
                 key={document.id}
                 document={document}
                 onDelete={handleDeleteDocument}
+                onRefresh={fetchDocuments}
               />
             ))}
           </div>

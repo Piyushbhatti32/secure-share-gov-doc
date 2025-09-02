@@ -17,7 +17,11 @@ build/
 dist/
 
 # Static build output
-public/
+# Note: Keep public/ directory but ignore specific files
+public/*.log
+public/temp/
+public/uploads/
+public/cache/
 
 # Environment variables
 .env
@@ -26,6 +30,13 @@ public/
 .env.test.local
 .env.production.local
 .env*.local
+.env.example
+
+# Local configuration files
+config.local.js
+config.local.json
+*.local.js
+*.local.json
 
 # Vercel deployment
 .vercel
@@ -39,6 +50,9 @@ coverage/
 .nyc_output/
 .jest/
 *.lcov
+test-results/
+playwright-report/
+playwright/.cache/
 
 # Grunt, Bower, and other build tools
 .grunt
@@ -149,6 +163,9 @@ cloudinary.json
 cloudinary-config.json
 clerk.json
 clerk-config.json
+secrets.json
+*.secret
+*.key
 
 # Security/SSL
 *.pem
@@ -178,9 +195,76 @@ yarn.lock
 pnpm-lock.yaml
 bun.lockb
 
+# Additional package manager files
+.npm-debug.log
+.yarn-error.log
+.pnpm-debug.log
+
 # Local development
 .local/
 local/
+dev/
+development/
+
+# Runtime files
+*.pid
+*.seed
+*.pid.lock
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env.test
+.env.production
 
 # User uploads
 # (All uploads are stored in Cloudinary; no local uploads directory)
+
+# Additional development patterns
+*.orig
+*.rej
+*.diff
+*.patch
+
+# IDE and editor specific
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/usage.statistics.xml
+.idea/dictionaries/
+.idea/shelf/
+
+# OS specific (additional)
+Thumbs.db:encryptable
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Package manager
+.npmrc
+.yarnrc
+.yarnrc.yml
+.pnpmrc

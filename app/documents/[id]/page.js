@@ -9,12 +9,21 @@ import documentService from '@/lib/services/document-service';
 import { formatDate } from '@/lib/utils/date-utils';
 import PDFViewer from '@/components/PDFViewer';
 import shareService from '@/lib/services/share-service';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 export default function DocumentViewPage() {
   const { user, isLoaded, isSignedIn } = useUser();
   const router = useRouter();
   const params = useParams();
-  const documentId = params.id;
+  // Decode base64 encoded document ID if it's encoded, otherwise use as-is
+  let documentId;
+  try {
+    // Try to decode as base64
+    documentId = atob(params.id);
+  } catch (error) {
+    // If decoding fails, use the original ID (not base64 encoded)
+    documentId = params.id;
+  }
   
   const [document, setDocument] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -54,17 +63,20 @@ export default function DocumentViewPage() {
     }
   };
 
-  const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
-      try {
-        await documentService.deleteDocument(documentId);
-        router.push('/documents');
-      } catch (err) {
-        console.error('Error deleting document:', err);
-        setError('Failed to delete document');
-      }
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const handleDelete = () => setConfirmOpen(true);
+  const confirmDelete = async () => {
+    try {
+      await documentService.deleteDocument(documentId);
+      router.push('/documents');
+    } catch (err) {
+      console.error('Error deleting document:', err);
+      setError('Failed to delete document');
+    } finally {
+      setConfirmOpen(false);
     }
   };
+  const cancelDelete = () => setConfirmOpen(false);
 
   const handleShare = async () => {
     if (!shareEmail.trim()) {
@@ -462,6 +474,18 @@ export default function DocumentViewPage() {
           </div>
         </div>
       )}
+
+      {/* Confirm Delete Dialog */}
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Delete document?"
+        message="This action cannot be undone. The file will be permanently removed."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+      />
     </div>
   );
 }

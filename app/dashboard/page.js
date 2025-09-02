@@ -5,14 +5,13 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { formatDate, formatRelativeTime } from '@/lib/utils/date-utils';
-import { ActivityIcons, logActivity, ActivityType } from '@/lib/services/activity-service';
-import { useBuildSafeUser, useBuildSafeAuth } from '@/lib/hooks/useBuildSafeAuth';
-import documentService from '@/lib/services/document-service';
-import shareService from '@/lib/services/share-service';
+import { useBuildSafeUser } from '@/lib/hooks/useBuildSafeAuth';
+import useSWR from 'swr';
+import { jsonFetcher } from '@/lib/utils/fetcher';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function DashboardPage() {
   const { user, isLoaded, isSignedIn } = useBuildSafeUser();
-  const { userId } = useBuildSafeAuth();
   const [recentDocuments, setRecentDocuments] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [totalDocumentsCount, setTotalDocumentsCount] = useState(0);
@@ -22,42 +21,54 @@ export default function DashboardPage() {
   const [activityError, setActivityError] = useState(null);
   const router = useRouter();
 
+  const { data, isLoading, mutate } = useSWR(
+    isLoaded && isSignedIn ? '/api/documents' : null,
+    jsonFetcher,
+    { revalidateOnFocus: false, keepPreviousData: true }
+  );
+
   useEffect(() => {
     if (!isLoaded) return;
-
-    if (!isSignedIn) {
-      router.push('/sign-in');
-      return;
-    }
-
+    if (!isSignedIn) { router.push('/sign-in'); return; }
     fetchDashboardData();
-  }, [isLoaded, isSignedIn, userId, router, user]);
+  }, [isLoaded, isSignedIn, router, user, data]);
 
   const fetchDashboardData = async () => {
     try {
-      setLoading(true);
+      if (recentDocuments.length === 0) setLoading(true);
       setActivityLoading(true);
 
       console.log('🔄 Fetching dashboard data...');
 
-      // Fetch documents and shared documents
-      const [documents, sharedDocs] = await Promise.all([
-        documentService.getDocuments(),
-        shareService.getDocumentsSharedBy(user?.primaryEmailAddress?.emailAddress || '')
-      ]);
+      // Fetch documents using the new secure API
+      const result = data || (await jsonFetcher('/api/documents'));
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch documents');
+      }
 
-      console.log('📄 Documents fetched:', documents);
-      console.log('🔗 Shared documents fetched:', sharedDocs);
+      // Combine owned and shared documents
+      const ownedDocs = result.documents?.owned || [];
+      const sharedDocs = result.documents?.shared || [];
+      const allDocs = [...ownedDocs, ...sharedDocs].sort((a, b) => 
+        new Date(b.uploadedAt || b.sharedAt) - new Date(a.uploadedAt || a.sharedAt)
+      );
 
-      setRecentDocuments(documents.slice(0, 5)); // Show last 5 documents
-      setTotalDocumentsCount(documents.length);
+      console.log('📄 Documents fetched:', {
+        owned: ownedDocs.length,
+        shared: sharedDocs.length,
+        total: allDocs.length
+      });
+
+      setRecentDocuments(allDocs.slice(0, 5)); // Show last 5 documents
+      setTotalDocumentsCount(allDocs.length);
       setSharedDocumentsCount(sharedDocs.length);
       setRecentActivity([]); // For now, keep empty until activity service is implemented
       
       console.log('✅ Dashboard data updated:', {
-        totalDocuments: documents.length,
+        totalDocuments: allDocs.length,
         sharedDocuments: sharedDocs.length,
-        recentDocuments: documents.slice(0, 5).length
+        recentDocuments: allDocs.slice(0, 5).length
       });
       
     } catch (error) {
@@ -72,13 +83,11 @@ export default function DashboardPage() {
     }
   };
 
-  // Removed fetchRecentData and all mockDataService usage
-
-  if (loading || !isLoaded) {
+  if ((loading || isLoading) || !isLoaded) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <LoadingSpinner size="xl" color="white" className="mb-4" />
           <p className="text-blue-200">Loading dashboard...</p>
         </div>
       </div>
@@ -176,18 +185,22 @@ export default function DashboardPage() {
             ) : (
               <div className="space-y-4">
                 {recentDocuments.map((doc) => (
-                  <div key={doc.public_id || doc.id} className="flex items-center justify-between p-3 sm:p-4 bg-black/20 rounded-lg border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300">
+                  <div key={doc.id} className="flex items-center justify-between p-3 sm:p-4 bg-black/20 rounded-lg border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300">
                     <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
                       <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center flex-shrink-0">
                         <i className="fa-solid fa-file-lines text-white text-sm sm:text-base"></i>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-white font-medium text-sm sm:text-base truncate">{doc.display_name || doc.original_filename || doc.name || 'Untitled Document'}</p>
-                        <p className="text-blue-200 text-xs sm:text-sm">{formatRelativeTime(doc.created_at || doc.uploadedAt || doc.createdAt || new Date())}</p>
+                        <p className="text-white font-medium text-sm sm:text-base truncate">
+                          {doc.name || doc.originalFileName || 'Untitled Document'}
+                        </p>
+                        <p className="text-blue-200 text-xs sm:text-sm">
+                          {formatRelativeTime(doc.uploadedAt || doc.sharedAt || doc.createdAt || new Date())}
+                        </p>
                       </div>
                     </div>
                     <Link 
-                      href={`/documents/${doc.public_id || doc.id}`}
+                      href={`/documents/${doc.id}`}
                       className="text-blue-400 hover:text-blue-300 transition-colors duration-300 flex-shrink-0 ml-2"
                     >
                       <i className="fa-solid fa-up-right-from-square"></i>
@@ -230,7 +243,7 @@ export default function DashboardPage() {
                 {recentActivity.map((activity) => (
                   <div key={activity.id} className="flex items-center space-x-2 sm:space-x-3 p-3 sm:p-4 bg-black/20 rounded-lg border border-blue-500/20">
                     <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <i className={`${ActivityIcons[activity.type] || 'fa-solid fa-info-circle'} text-white text-xs sm:text-sm`}></i>
+                      <i className="fa-solid fa-info-circle text-white text-xs sm:text-sm"></i>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-xs sm:text-sm truncate">{activity.description}</p>
